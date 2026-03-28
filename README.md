@@ -1,26 +1,27 @@
 # UniTrade
 
-UniTrade is a student-focused campus marketplace built with React + Vite, Firebase (Auth + Firestore), and Algorand TestNet wallet payments.
+UniTrade is a high-end, student-focused campus marketplace built with React + Vite, Firebase (Auth + Firestore), and Algorand TestNet wallet payments. It features a modern **"Etheric Glass"** design system with full mobile responsiveness.
 
 The app supports real-time listings, buyer-seller chat, negotiated offers, wishlist sync, and an OTP-gated payment release workflow designed for in-person campus handovers.
 
 ## Table of Contents
 
-1. Project Summary
-2. Core Features
-3. Tech Stack
-4. Application Architecture
-5. Project Structure
-6. Local Development Setup
-7. Firebase Setup Guide
-8. Algorand and Pera Wallet Setup
-9. User Flows
-10. Firestore Data Model
-11. Security Model and Rules
-12. Scripts
-13. Troubleshooting
-14. Known Limitations
-15. Future Improvements
+1. [Project Summary](#project-summary)
+2. [Core Features](#core-features)
+3. [Design System: Etheric Glass](#design-system-etheric-glass)
+4. [Tech Stack](#tech-stack)
+5. [Application Architecture](#application-architecture)
+6. [Project Structure](#project-structure)
+7. [Local Development Setup](#local-development-setup)
+8. [Firebase Setup Guide](#firebase-setup-guide)
+9. [Algorand and Pera Wallet Setup](#algorand-and-pera-wallet-setup)
+10. [User Flows](#user-flows)
+11. [Firestore Data Model](#firestore-data-model)
+12. [Security Model and Rules](#security-model-and-rules)
+13. [Scripts](#scripts)
+14. [Troubleshooting](#troubleshooting)
+15. [Known Limitations](#known-limitations)
+16. [Future Improvements](#future-improvements)
 
 ## Project Summary
 
@@ -28,470 +29,111 @@ UniTrade solves a common campus problem: students need a trusted, fast, low-fric
 
 This project combines:
 
-- A modern React frontend with live Firestore synchronization.
+- A stunning **Glassmorphism UI** with deep-space gradients and neon accents.
 - Anonymous Firebase authentication for lightweight onboarding.
 - Algorand wallet integration through Pera Wallet.
 - A "held-until-verification" order workflow where payment is only released after in-person OTP verification.
+- Full mobile responsiveness for on-the-go campus trading.
 
 ## Core Features
 
 ### Marketplace and Discovery
 
-- Real-time listing feed with Firestore subscriptions.
-- Search, category filters, condition filters, and price range filtering.
-- Sorting by newest, price ascending, price descending, and top rated.
-- Wishlist support with real-time sync.
+- **Etheric Glass UI**: Semi-transparent surfaces, backdrop blurs, and neon cyan/magenta accents.
+- **Real-time Feed**: Instant updates using Firestore subscriptions.
+- **Advanced Filtering**: Search, categories, condition, and price range sliders.
+- **Smart Sorting**: Sort by Newest, Price (Asc/Desc), and Top Rated.
+- **Wishlist**: Personal space to save interesting items with real-time sync.
 
 ### Listing Management
 
-- Create listing modal with title, category, condition, description, emoji thumbnail, and ALGO price.
-- Ownership-aware actions: only owner can delete a listing.
-- Listing automatically marked sold after successful payment release.
+- **Visual Creation**: Modal-based listing with auto-thumbnail emojis and rich metadata.
+- **Ownership Control**: Robust security ensures only owners can edit or delete their items.
+- **Auto-Sold**: Listings automatically transition to "Sold" state upon algorithmic payment finality.
 
 ### Wallet and Payments
 
-- Pera Wallet connect, reconnect session support, and disconnect.
-- Live ALGO balance polling using Algod TestNet API.
-- On-chain payment release transaction created and signed from wallet.
+- **Pera Wallet Integration**: Secure connection, session persistence, and instant signing.
+- **Live Balance**: Real-time ALGO polling via Algod TestNet.
+- **On-Chain Transactions**: Finalizing deals directly on the Algorand blockchain.
 
 ### Orders and Fulfillment
 
-- Order creation with held payment status.
-- OTP generation by buyer.
-- OTP verification by seller.
-- Payment release by buyer only after seller verification.
-- Order cancellation with role and state checks.
-- Post-completion rating support.
+- **Handover Workflow**: OTP-based physical verification system.
+- **Custom Offers**: Structured negotiation flow within the chat system.
+- **Rating System**: Build campus trust with post-deal ratings.
+- **Order Tracking**: Comprehensive dashboard for "My Orders" and "Listed Offers".
 
-### Realtime Chat and Negotiation
+## Design System: Etheric Glass
 
-- Buyer-seller chat threads per listing.
-- Seller can send structured offer messages.
-- Buyer can accept/reject offer in chat.
-- Accepted offer creates/updates negotiated order and checkout path.
+UniTrade uses a custom-built Glassmorphism engine defined in `glassmorphism.css`:
 
-### Campus Trust and UX Features
-
-- Student email verification flow (domain-restricted in UI).
-- Campus meetup map with predefined safe handover spots.
-- Activity indicators and toast feedback for critical actions.
+- **Aesthetic**: Deep dark backgrounds (`#0d0d1c`), 12px-24px backdrop blurs, and 1px "ghost borders" (low-opacity white).
+- **Colors**: Primary Cyan (`#00F2FE`), Magenta (`#FF00C8`), and Soft Gold accents.
+- **Mobile First**: 
+  - **Bottom Action Sheets**: Side drawers automatically transform into mobile-native bottom sheets on small screens.
+  - **Responsive Grids**: Layouts collapse from multi-column grids to sleek vertical feeds.
+  - **Reflowed Headers**: Dense navigation wraps into accessible mobile layouts.
+- **Dark Mode Maps**: Custom Leaflet overrides inverting tiles while preserving UI layers and neon markers.
 
 ## Tech Stack
 
 ### Frontend
 
-- React 19
-- Vite 7
-- Inline-style UI architecture with global CSS utilities/animations
+- **React 19**: Modern component architecture.
+- **Vite 7**: Ultra-fast build tool and dev server.
+- **Vanilla CSS (Glassmorphism)**: Custom design token system with heavy backdrop-filter usage.
 
 ### Backend-as-a-Service
 
-- Firebase Authentication (anonymous sign-in)
-- Cloud Firestore (real-time collections + security rules)
+- **Firebase Authentication**: Anonymous and logic-ready.
+- **Cloud Firestore**: High-performance real-time database.
 
 ### Web3 and Payments
 
-- algosdk
-- @perawallet/connect
-- Algorand TestNet via Algonode API
+- **algosdk**: Core Algorand interaction.
+- **@perawallet/connect**: Primary wallet provider.
+- **Algorand TestNet**: Running on carbon-neutral blockchain infrastructure.
 
 ### Mapping
 
-- Leaflet + React Leaflet
-
-### Tooling
-
-- ESLint 9
-- Vite node polyfills plugin (Buffer/crypto/process compatibility)
+- **Leaflet + React Leaflet**: Themed dark-mode campus map integration.
 
 ## Application Architecture
 
-High-level runtime flow:
-
-1. App boots and initializes Firebase config.
-2. Anonymous auth session is established.
-3. Listings, orders, and wishlist hooks subscribe to Firestore snapshots.
-4. User connects Pera wallet to enable buy/sell actions.
-5. Buyer and seller interact via listing cards, chat, offers, and order actions.
-6. Payment release finalizes on-chain and order/listing states are updated in Firestore.
-
-### Layers
-
-- UI Components: rendering and interaction.
-- Hooks: view-model state + realtime orchestration.
-- Services: Firestore reads/writes and domain constraints.
-- External integrations: Firebase, Algorand network, Pera wallet.
+1. **Boot**: App initializes Firebase and Establishes Auth.
+2. **Sync**: Real-time hooks (`useListings`, `useOrders`, `useWishlist`) subscribe to Firestore.
+3. **Connect**: User links Pera Wallet to unlock "Signed" operations.
+4. **Interact**: Trading happens via Cards, Modals, and Chat Drawers.
+5. **Finalize**: Chain-based payment release updates the source of truth (Firestore).
 
 ## Project Structure
 
-Top-level:
-
-- eslint.config.js
-- firestore.rules
-- index.html
-- package.json
-- vite.config.js
-- src/
-
-Core app files:
-
-- src/App.jsx: main shell, tab navigation, wallet flow, and orchestration.
-- src/main.jsx: React root entry.
-- src/index.css: base styles, animations, and map popup overrides.
-
-Components:
-
-- src/components/ListingCard.jsx
-- src/components/OrderRow.jsx
-- src/components/SellModal.jsx
-- src/components/CheckoutModal.jsx
-- src/components/ChatDrawer.jsx
-- src/components/VerifyModal.jsx
-- src/components/MapModal.jsx
-- src/components/Shared.jsx
-
-Hooks:
-
-- src/hooks/useAuthUser.js
-- src/hooks/useListings.js
-- src/hooks/useOrders.js
-- src/hooks/useWishlist.js
-
-Services:
-
-- src/services/listingsService.js
-- src/services/ordersService.js
-- src/services/chatService.js
-- src/services/wishlistService.js
-
-Support:
-
-- src/firebase/config.js
-- src/data/seedListings.js
+- `src/main.jsx`: Entry point with CSS cascades.
+- `src/index.css`: Foundation and brutalism legacy.
+- `src/glassmorphism.css`: **The Design System** (Theme + Mobile Rules).
+- `src/components/`: Atomic UI components (ListingCard, ChatDrawer, etc.).
+- `src/hooks/`: Business logic orchestration.
+- `src/services/`: Direct API interface for Firestore and Algorand.
 
 ## Local Development Setup
 
-### Prerequisites
-
-- Node.js 18+ (recommended LTS)
-- npm
-- A Firebase project with Firestore and Authentication enabled
-- Pera Wallet mobile app (for live wallet flows)
-
-### Install and Run
-
-1. Install dependencies:
-
-   npm install
-
-2. Create your local environment file:
-
-   Copy .env.example to .env
-
-3. Fill all Firebase values in .env (see next section).
-
-4. Start dev server:
-
-   npm run dev
-
-5. Build production bundle:
-
-   npm run build
-
-6. Preview production build locally:
-
-   npm run preview
-
-### Environment Variables
-
-Required variables (defined in .env.example):
-
-- VITE_FIREBASE_API_KEY
-- VITE_FIREBASE_AUTH_DOMAIN
-- VITE_FIREBASE_PROJECT_ID
-- VITE_FIREBASE_STORAGE_BUCKET
-- VITE_FIREBASE_MESSAGING_SENDER_ID
-- VITE_FIREBASE_APP_ID
-
-If any are missing, Firebase initialization is disabled and features depending on Firestore/Auth will not function.
-
-## Firebase Setup Guide
-
-### 1. Create Firebase Project
-
-- Open Firebase Console.
-- Create or select a project.
-- Add a Web app to obtain config values.
-
-### 2. Enable Authentication
-
-- Go to Authentication -> Sign-in method.
-- Enable Anonymous provider.
-
-### 3. Enable Firestore
-
-- Go to Firestore Database.
-- Create database in your preferred region.
-
-### 4. Apply Security Rules
-
-- Use the rules in firestore.rules.
-- These rules enforce owner/participant access for listings, orders, orderSecrets, and wishlists.
-
-### 5. Optional: Deploy Rules via CLI
-
-If using Firebase CLI in this project:
-
-- firebase login
-- firebase use <your-project-id>
-- firebase deploy --only firestore:rules
-
-## Algorand and Pera Wallet Setup
-
-### Network
-
-- This project currently targets Algorand TestNet.
-- Algod endpoint used in app: https://testnet-api.algonode.cloud
-
-### Wallet
-
-1. Install Pera Wallet on mobile device.
-2. Create/import a wallet account.
-3. Fund account with TestNet ALGO from a faucet.
-4. Connect wallet from app header using Connect Pera.
-
-### Payment Lifecycle
-
-- Checkout creates/updates held order in Firestore.
-- Buyer and seller complete OTP handshake offline at meetup.
-- Buyer signs on-chain transfer to seller.
-- On successful confirmation, order state is finalized as completed/released.
-
-## User Flows
-
-### Buyer Flow
-
-1. Open Browse tab.
-2. Filter/search listings.
-3. Connect Pera wallet.
-4. Open chat and negotiate (optional).
-5. Buy now or accept offer, choose pickup location.
-6. Order appears under My Orders with payment held.
-7. Share generated OTP at physical handover.
-8. After seller verifies OTP, click Release Payment.
-9. Optionally rate completed order.
-
-### Seller Flow
-
-1. Connect wallet.
-2. Verify student email in UI modal.
-3. List an item via Sell modal.
-4. Chat with interested buyers and send offers if needed.
-5. Open Listed Offers tab.
-6. Verify buyer OTP during handover.
-7. Wait for buyer to release payment.
-
-### Negotiated Offer Flow
-
-1. Seller sends offer message in chat.
-2. Buyer accepts or rejects.
-3. On accept, a negotiated order record is created or updated.
-4. Buyer completes checkout at negotiated price.
-
-## Firestore Data Model
-
-The app uses these collections:
-
-- listings
-- orders
-- orderSecrets
-- wishlists
-- chats (with nested messages subcollection)
-
-### listings
-
-Representative fields:
-
-- title: string
-- price: number
-- description: string
-- category: string
-- condition: string
-- image: string (emoji icon)
-- seller: object
-- ownerId: string
-- sellerAddress: string
-- buyerId: string
-- isActive: boolean
-- rating: number
-- ratingCount: number
-- timestamp: server timestamp
-- date: ISO fallback string
-
-### orders
-
-Representative fields:
-
-- listingId, chatId, offerMessageId
-- buyerId, sellerId
-- buyerAddress, sellerAddress
-- title, image
-- amount, price, negotiatedPrice, finalPrice
-- status: pending | ready_for_delivery | completed | cancelled
-- paymentStatus: held | released
-- pickupLocation
-- txId
-- OTP fields: otpHash, otpCreatedAt, otpExpiresAt, otpVerified, otpAttempts, otpMaxAttempts
-- rating fields: rated, rating
-- timestamp and lifecycle timestamps
-
-### orderSecrets
-
-Stores buyer-visible plaintext OTP separately from order:
-
-- orderId
-- buyerId
-- otp
-- otpCreatedAt
-- otpExpiresAt
-- updatedAt
-
-### wishlists
-
-Document id equals userId:
-
-- userId
-- listingIds: string[]
-- updatedAt
-
-### chats and messages
-
-chats documents include:
-
-- listingId
-- buyerId
-- sellerId
-- participants and participantsKey
-- summary fields: lastMessageText, lastMessageAt, updatedAt
-
-messages subcollection entries include:
-
-- type: text | offer
-- senderId
-- text
-- offeredPrice, offerStatus (for offer type)
-- timestamps
-
-## Security Model and Rules
-
-Rules in firestore.rules implement key constraints:
-
-- Listings:
-  - Public read.
-  - Create allowed only when request.auth.uid matches ownerId.
-  - Update/delete only by owner.
-- Orders:
-  - Read/update only by order participants (buyer or seller).
-  - Create only if actor is buyer or seller in request payload.
-- orderSecrets:
-  - Buyer-only create/read/update/delete.
-- wishlists:
-  - User can access only own wishlist document.
-
-This aligns with service-level checks in src/services for defense in depth.
-
-## Scripts
-
-Available npm scripts:
-
-- npm run dev: starts Vite development server.
-- npm run build: creates production build.
-- npm run preview: serves production build locally.
-- npm run lint: runs ESLint checks.
-
-## Troubleshooting
-
-### App shows missing Firebase configuration
-
-Cause:
-
-- One or more VITE_FIREBASE_* variables are missing.
-
-Fix:
-
-- Verify .env exists at project root and all values are populated.
-- Restart dev server after updating .env.
-
-### Anonymous sign-in fails
-
-Cause:
-
-- Anonymous provider disabled.
-
-Fix:
-
-- Enable Anonymous in Firebase Authentication settings.
-
-### Firestore permission denied
-
-Cause:
-
-- Rules do not allow current operation.
-- UID mismatch between auth user and owner/participant fields.
-
-Fix:
-
-- Confirm firestore.rules are deployed.
-- Confirm create/update payloads include correct ownerId/buyerId/sellerId.
-
-### Realtime sync appears stuck
-
-Cause:
-
-- Firestore API disabled, networking issues, or rules blocked.
-
-Fix:
-
-- Check browser console.
-- Verify Firestore is enabled in Firebase project.
-- Confirm API access and network connectivity.
-
-### Wallet connects but payment release fails
-
-Cause:
-
-- Missing seller address, insufficient balance, or OTP not verified.
-
-Fix:
-
-- Confirm order has sellerAddress.
-- Ensure buyer has enough TestNet ALGO.
-- Verify seller completed OTP verification first.
-
-### Leaflet markers do not render
-
-Cause:
-
-- Icon asset paths are not resolved by bundler.
-
-Fix:
-
-- This project already sets CDN marker icon URLs in MapModal.
-- Ensure network can access cdnjs resources.
+1. `npm install`
+2. Copy `.env.example` to `.env` and fill Firebase credentials.
+3. `npm run dev`
 
 ## Known Limitations
 
-- Student verification modal is a UI/demo flow and does not send real emails.
-- Payment hold is an application state pattern, not a smart-contract escrow.
-- ALGO-to-USD conversion in listing card is static approximation.
-- No backend Cloud Functions for irreversible workflow enforcement.
-- No automated test suite is included yet.
+- Email verification is a UI simulation (No actual email backend).
+- ALGO/INR rates are based on a static 15x multiplier.
+- No automated frontend test suite (Component-level unit tests needed).
 
 ## Future Improvements
 
-- Replace demo verification with real email OTP backend.
-- Add smart-contract based escrow for stronger trust guarantees.
-- Add admin/moderation and reporting workflows.
-- Add pagination and virtualized feeds for large datasets.
-- Add unit and integration tests for hooks and services.
-- Add CI pipeline for lint/build/rules validation.
+- **PWA Support**: Full offline and "Add to Home Screen" capability.
+- **Smart Contract Escrow**: Replacing app-state logic with decentralized Teal scripts.
+- **Live Price Feed**: Integration with DEX APIs for real-time INR/USD rates.
+- **Rich Media**: Shifting from emojis to Cloud Storage image uploads.
+
+---
+*Built for the campus. Powered by Algorand.*
