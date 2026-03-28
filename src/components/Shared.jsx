@@ -3,36 +3,76 @@ import React, { useEffect } from "react";
 
 // ── Toast ──
 export function Toast({ message, type, onClose }) {
-    useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
-    const bg = type === "success" ? "#10b981" : type === "error" ? "#ef4444" : "#3b82f6";
+    useEffect(() => { const t = setTimeout(onClose, 4500); return () => clearTimeout(t); }, [onClose]);
+    const cls = type === "success" ? "toast toast-success" : type === "error" ? "toast toast-error" : "toast toast-info";
+    const icon = type === "success" ? "✓" : type === "error" ? "✗" : "—";
     return (
-        <div style={{ position: "fixed", bottom: 28, right: 28, zIndex: 9999, background: bg, color: "#fff", borderRadius: 12, padding: "14px 22px", fontFamily: "'DM Mono', monospace", fontSize: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.35)", display: "flex", alignItems: "center", gap: 10, maxWidth: 360, animation: "slideUp .3s ease" }}>
-            <span>{type === "success" ? "✓" : type === "error" ? "✗" : "ℹ"}</span>
-            <span>{message}</span>
-            <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", color: "#fff", cursor: "pointer", fontSize: 16 }}>×</button>
+        <div className={cls}>
+            <span style={{ flexShrink: 0 }}>{icon}</span>
+            <span style={{ lineHeight: 1.5 }}>{message}</span>
+            <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: 18, opacity: 0.6, padding: "0 2px", flexShrink: 0 }}>×</button>
         </div>
     );
 }
 
 // ── Badge ──
 export function Badge({ text, color }) {
-    return <span style={{ background: color + "22", color, border: `1px solid ${color}55`, borderRadius: 6, padding: "2px 8px", fontSize: 11, fontFamily: "'DM Mono', monospace", fontWeight: 600 }}>{text}</span>;
+    // Map color to badge class
+    const colorMap = {
+        "#10b981": "badge-emerald",
+        "#00FF94": "badge-emerald",
+        "#3b82f6": "badge-gold",
+        "#D4AF37": "badge-gold",
+        "#f59e0b": "badge-amber",
+        "#ef4444": "badge-red",
+        "#FF3333": "badge-red",
+    };
+    const cls = `badge ${colorMap[color] || "badge-muted"}`;
+    return <span className={cls}>{text.toUpperCase()}</span>;
 }
 
 // ── Truncate ──
-export const truncate = (addr) => addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
-export const statusColor = {
-    pending: "#f59e0b",
-    ready_for_delivery: "#3b82f6",
-    completed: "#10b981",
-    cancelled: "#ef4444",
-    Pending: "#f59e0b",
-    Negotiated: "#3b82f6",
-    Confirmed: "#10b981",
-    Failed: "#ef4444"
-};
-export const conditionColor = { "Like New": "#10b981", "Excellent": "#3b82f6", "Good": "#f59e0b", "Fair": "#ef4444" };
+export const truncate = (addr) => addr ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : "";
 
-// ── Shared Styles ──
-export const labelStyle = { display: "block", color: "#9ca3af", fontSize: 12, fontWeight: 600, marginBottom: 6, fontFamily: "'DM Mono', monospace" };
-export const inputStyle = { width: "100%", background: "#1f2937", border: "1px solid #374151", borderRadius: 8, padding: "10px 12px", color: "#f9fafb", fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: "inherit" };
+export const statusColor = {
+    pending:              "var(--amber)",
+    ready_for_delivery:   "var(--gold)",
+    completed:            "var(--emerald)",
+    cancelled:            "var(--red)",
+    Pending:              "var(--amber)",
+    Negotiated:           "var(--gold)",
+    Confirmed:            "var(--emerald)",
+    Failed:               "var(--red)",
+};
+
+export const conditionColor = {
+    "Like New":  "var(--emerald)",
+    "Excellent": "var(--gold)",
+    "Good":      "var(--amber)",
+    "Fair":      "var(--red)",
+};
+
+// ── Shared Styles (modal forms) ──
+export const labelStyle = {
+    display: "block",
+    color: "var(--text-dim)",
+    fontSize: 10,
+    fontWeight: 700,
+    marginBottom: 8,
+    fontFamily: "'Space Mono', monospace",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+};
+
+export const inputStyle = {
+    width: "100%",
+    background: "var(--s0)",
+    border: "1px solid var(--border)",
+    padding: "12px 14px",
+    color: "var(--text)",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+    fontFamily: "'Inter', sans-serif",
+    transition: "border-color 0.2s",
+};

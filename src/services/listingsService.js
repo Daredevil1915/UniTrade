@@ -209,8 +209,11 @@ export async function removeListing(listingId, requesterUserId) {
   const snapshot = await getDoc(ref);
   if (!snapshot.exists()) return;
 
-  const ownerId = snapshot.data().ownerId || "";
-  if (!requesterUserId || requesterUserId !== ownerId) {
+  const data = snapshot.data();
+  const ownerId = data.ownerId || "";
+  const ownerAddress = data.sellerAddress || data.seller?.walletAddress || "";
+
+  if (!requesterUserId || (requesterUserId !== ownerId && requesterUserId !== ownerAddress)) {
     throw new Error("You can only delete your own listings.");
   }
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { inputStyle } from "./Shared";
+import { inputStyle, labelStyle } from "./Shared";
 
 const VALID_DOMAINS = ["@iec.ac.in"];
 
@@ -13,7 +13,7 @@ export default function VerifyModal({ onClose, onVerify }) {
         setError("");
         const domain = email.substring(email.indexOf("@"));
         if (!VALID_DOMAINS.some(d => domain.toLowerCase() === d)) {
-            setError(`Only IEC email is accepted: ${VALID_DOMAINS[0]}`);
+            setError(`ONLY IEC EMAIL IS ACCEPTED: ${VALID_DOMAINS[0]}`);
             return;
         }
         setStep("code");
@@ -28,56 +28,60 @@ export default function VerifyModal({ onClose, onVerify }) {
                 onClose();
             }, 1500);
         } else {
-            setError("Enter the 4-digit code (demo: any 4 digits)");
+            setError("ENTER THE 4-DIGIT CODE (DEMO: ANY 4 DIGITS)");
         }
     };
 
     return (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={e => e.target === e.currentTarget && onClose()}>
-            <div style={{ background: "#0f172a", border: "1px solid #1f2937", borderRadius: 20, padding: 32, width: "100%", maxWidth: 420, textAlign: "center", animation: "scaleIn .25s ease" }}>
+        <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+            <div className="modal-panel" style={{ maxWidth: 420, padding: 40, textAlign: "center" }}>
                 {step === "done" ? (
                     <>
-                        <div style={{ fontSize: 64, marginBottom: 16, animation: "float 2s ease infinite" }}>✅</div>
-                        <h2 style={{ color: "#10b981", fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Verified!</h2>
-                        <p style={{ color: "#6b7280", fontSize: 14 }}>Your student identity has been confirmed.</p>
+                        <div style={{ fontSize: 64, marginBottom: 24, animation: "float 2s ease infinite" }}>✅</div>
+                        <h2 className="serif" style={{ color: "var(--emerald)", fontSize: 24, fontWeight: 800, marginBottom: 12 }}>VERIFIED.</h2>
+                        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Your student identity has been confirmed.</p>
                     </>
                 ) : (
                     <>
-                        <div style={{ fontSize: 52, marginBottom: 16 }}>🎓</div>
-                        <h2 style={{ color: "#f9fafb", fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Student Verification</h2>
-                        <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>
-                            {step === "input" ? "Enter your university email to get verified." : "Enter the verification code sent to your email."}
+                        <div style={{ fontSize: 48, marginBottom: 24 }}>🎓</div>
+                        <h2 className="serif" style={{ color: "var(--text)", fontSize: 22, fontWeight: 800, marginBottom: 12 }}>STUDENT VERIFICATION.</h2>
+                        <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 32 }}>
+                            {step === "input" ? "Enter your university email to get verified on the ledger." : "Enter the verification code sent to your email."}
                         </p>
 
                         {step === "input" ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                <input style={inputStyle} type="email" value={email} onChange={e => setEmail(e.target.value)}
-                                    placeholder="you@iec.ac.in" onKeyDown={e => e.key === "Enter" && handleSendCode()} />
-                                {error && <div style={{ color: "#ef4444", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{error}</div>}
-                                <div style={{ fontSize: 11, color: "#4b5563", fontFamily: "'DM Mono', monospace", textAlign: "left" }}>
-                                    Supported: {VALID_DOMAINS.join(", ")}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                <div style={{ textAlign: "left" }}>
+                                    <label style={labelStyle}>UNIVERSITY EMAIL</label>
+                                    <input className="input-box" type="email" value={email} onChange={e => setEmail(e.target.value)}
+                                        placeholder="you@iec.ac.in" onKeyDown={e => e.key === "Enter" && handleSendCode()} />
                                 </div>
-                                <button onClick={handleSendCode}
-                                    style={{ padding: "12px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 15 }}>
-                                    Send Verification Code
+                                {error && <div style={{ color: "var(--red)", fontSize: 11, fontFamily: "'Space Mono', monospace", textAlign: "left" }}>{error}</div>}
+                                <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'Space Mono', monospace", textAlign: "left", letterSpacing: "0.05em" }}>
+                                    SUPPORTED DOMAINS: {VALID_DOMAINS.join(", ")}
+                                </div>
+                                <button className="btn-gold" onClick={handleSendCode} style={{ marginTop: 8 }}>
+                                    SEND VERIFICATION CODE
                                 </button>
                             </div>
                         ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                                <div style={{ background: "#111827", borderRadius: 10, padding: 12, fontSize: 13, color: "#a5b4fc", fontFamily: "'DM Mono', monospace" }}>
-                                    📧 Code sent to {email}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                <div style={{ background: "var(--s0)", border: "1px solid var(--border)", padding: 16, fontSize: 12, color: "var(--gold)", fontFamily: "'Space Mono', monospace", textAlign: "left" }}>
+                                    📧 CODE SENT TO {email.toUpperCase()}
                                 </div>
-                                <input style={{ ...inputStyle, textAlign: "center", letterSpacing: 8, fontSize: 24, fontFamily: "'DM Mono', monospace" }}
-                                    value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                                    placeholder="0000" maxLength={6} onKeyDown={e => e.key === "Enter" && handleVerify()} />
-                                {error && <div style={{ color: "#ef4444", fontSize: 12, fontFamily: "'DM Mono', monospace" }}>{error}</div>}
-                                <button onClick={handleVerify}
-                                    style={{ padding: "12px 0", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#10b981,#059669)", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 15 }}>
-                                    Verify
+                                <div style={{ textAlign: "left" }}>
+                                    <label style={labelStyle}>VERIFICATION CODE</label>
+                                    <input className="input-box" style={{ textAlign: "center", letterSpacing: 8, fontSize: 24, fontFamily: "'Space Mono', monospace" }}
+                                        value={code} onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                        placeholder="0000" maxLength={6} onKeyDown={e => e.key === "Enter" && handleVerify()} />
+                                </div>
+                                {error && <div style={{ color: "var(--red)", fontSize: 11, fontFamily: "'Space Mono', monospace", textAlign: "left" }}>{error}</div>}
+                                <button className="btn-gold" onClick={handleVerify} style={{ marginTop: 8 }}>
+                                    VERIFY IDENTITY
                                 </button>
                             </div>
                         )}
-                        <button onClick={onClose} style={{ marginTop: 12, background: "none", border: "none", color: "#6b7280", cursor: "pointer", fontSize: 13 }}>Cancel</button>
+                        <button onClick={onClose} className="btn-text-gold" style={{ marginTop: 24 }}>CANCEL</button>
                     </>
                 )}
             </div>

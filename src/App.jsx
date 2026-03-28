@@ -9,10 +9,12 @@ import CheckoutModal from "./components/CheckoutModal";
 import ChatDrawer from "./components/ChatDrawer";
 import VerifyModal from "./components/VerifyModal";
 import MapModal from "./components/MapModal";
+import ReceiptModal from "./components/ReceiptModal";
 import { useAuthUser } from "./hooks/useAuthUser";
 import { useListings } from "./hooks/useListings";
 import { useOrders } from "./hooks/useOrders";
 import { useWishlist } from "./hooks/useWishlist";
+import { useUserProfile } from "./hooks/useUserProfile";
 import { orderStatus, paymentStatus } from "./services/ordersService";
 
 const peraWallet = new PeraWalletConnect();
@@ -64,14 +66,31 @@ export default function App() {
   const [sortBy, setSortBy] = useState("newest");
   const [condFilter, setCondFilter] = useState("All");
   const [priceRange, setPriceRange] = useState([0, 50]);
+  
+  // Dynamic Max Price calculation
+  const absoluteMaxPrice = useMemo(() => {
+    if (!listings || listings.length === 0) return 50;
+    const prices = listings.map(l => Number(l.price) || 0);
+    return Math.ceil(Math.max(...prices, 10)); // At least 10
+  }, [listings]);
+
+  // Auto-adjust upper bound if price range was at default or if new listings exceed it
+  useEffect(() => {
+    setPriceRange(curr => [curr[0], Math.max(curr[1], absoluteMaxPrice)]);
+  }, [absoluteMaxPrice]);
   const [checkoutItem, setCheckoutItem] = useState(null);
   const [showSell, setShowSell] = useState(false);
   const [showVerify, setShowVerify] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [chatListing, setChatListing] = useState(null);
   const [toast, setToast] = useState(null);
-  const [verified, setVerified] = useState(false);
-  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [receiptOrder, setReceiptOrder] = useState(null);
+  
+  // User Profile persistence
+  const { profile, updateProfile } = useUserProfile(userId);
+  const verified = profile?.verified || false;
+  const verifiedEmail = profile?.email || "";
+  
   const [greenTrades, setGreenTrades] = useState(0);
   const [orderActionId, setOrderActionId] = useState("");
 
@@ -81,8 +100,15 @@ export default function App() {
     peraWallet.reconnectSession().then((accounts) => {
       if (accounts.length) setAccountAddress(accounts[0]);
     }).catch(() => { });
-    peraWallet.connector?.on("disconnect", () => setAccountAddress(null));
-  }, []);
+    const handleAutoDisconnect = async () => {
+      setAccountAddress(null);
+      if (userId) {
+        try { await updateProfile({ verified: false, email: "" }); } catch (e) { console.error(e); }
+      }
+    };
+
+    peraWallet.connector?.on("disconnect", handleAutoDisconnect);
+  }, [userId, updateProfile]);
 
   const fetchBalance = async (addr) => {
     if (!addr) {
@@ -122,11 +148,21 @@ export default function App() {
     }
   };
 
-  const disconnectWallet = () => {
-    peraWallet.disconnect();
-    setAccountAddress(null);
-    setBalance(null);
-    showToast("Wallet disconnected");
+  const disconnectWallet = async () => {
+    try {
+      await peraWallet.disconnect();
+      setAccountAddress(null);
+      setBalance(null);
+      if (userId) {
+        await updateProfile({ verified: false, email: "" });
+        showToast("Logged out. Verification cleared.", "info");
+      }
+    } catch (err) {
+      console.error("[UniTrade] Disconnect error:", err);
+      // Fallback UI reset
+      setAccountAddress(null);
+      setBalance(null);
+    }
   };
 
   const handleWishlistToggle = async (listingId) => {
@@ -173,18 +209,23 @@ export default function App() {
   }, [listings, category, condFilter, search, sortBy, priceRange]);
 
   const wishlistListings = useMemo(
-    () => listings.filter((listing) => listing.isActive !== false && wishlistIds.includes(listing.id)),
-    [listings, wishlistIds]
+    () => (accountAddress && userId) ? listings.filter((listing) => listing.isActive !== false && wishlistIds.includes(listing.id)) : [],
+    [listings, wishlistIds, accountAddress, userId]
   );
 
   const myOrders = useMemo(
-    () => orders.filter((order) => order.buyerId === userId),
-    [orders, userId]
+    () => accountAddress ? orders.filter((order) => order.buyerAddress === accountAddress) : [],
+    [orders, accountAddress]
   );
 
   const listedOfferOrders = useMemo(
-    () => orders.filter((order) => order.sellerId === userId),
-    [orders, userId]
+    () => accountAddress ? orders.filter((order) => order.sellerAddress === accountAddress) : [],
+    [orders, accountAddress]
+  );
+
+  const myActiveListings = useMemo(
+    () => accountAddress ? listings.filter((listing) => listing.sellerAddress === accountAddress && listing.isActive !== false && !listing.sold) : [],
+    [listings, accountAddress]
   );
 
   const handleListItem = async (listingInput) => {
@@ -211,13 +252,14 @@ export default function App() {
   };
 
   const handleDeleteListing = async (listing) => {
-    if (!userId || listing.ownerId !== userId) {
+    const sellerAddr = listing.sellerAddress || listing.seller?.walletAddress || listing.seller;
+    if (!accountAddress || sellerAddr !== accountAddress) {
       showToast("You can only delete your own listings.", "error");
       return;
     }
 
     try {
-      await deleteListing(listing.id);
+      await deleteListing(listing.id, accountAddress);
       showToast("Listing deleted.", "success");
     } catch (error) {
       showToast(error.message || "Could not delete listing.", "error");
@@ -376,6 +418,7 @@ export default function App() {
       }
       setGreenTrades((prev) => prev + 1);
       showToast(isCashOrder ? "Cash handover confirmed after OTP verification." : "Payment released to seller after OTP verification.", "success");
+      setReceiptOrder(verifiedOrder);
     });
   };
 
@@ -434,389 +477,489 @@ export default function App() {
 
   const co2Saved = (greenTrades * 0.0002).toFixed(4);
 
-  const tabStyle = (targetTab) => ({
-    padding: "8px 20px",
-    borderRadius: 8,
-    border: "none",
-    cursor: "pointer",
-    fontWeight: 700,
-    fontSize: 14,
-    background: tab === targetTab ? "#6366f1" : "none",
-    color: tab === targetTab ? "#fff" : "#6b7280",
-    fontFamily: "'DM Mono', monospace",
-    transition: "all .2s",
-  });
+  // Featured listing for hero (first active listing)
+  const featuredListing = listings.find(l => l.isActive !== false);
+
+  // Tab label map
+  const TAB_LABELS = {
+    "browse": "BROWSE",
+    "my-orders": `ORDERS${myOrders.length ? ` (${myOrders.length})` : ""}`,
+    "listed-offers": `OFFERS${(listedOfferOrders.length || myActiveListings.length) ? ` (${listedOfferOrders.length + myActiveListings.length})` : ""}`,
+    "wishlist": `SAVED${wishlistListings.length ? ` (${wishlistListings.length})` : ""}`,
+  };
+
+  // Ticker content
+  const TICKER_ITEMS = [
+    { text: "ALGORAND TESTNET", gold: false },
+    { text: "TXN FEE  0.001 ALGO", gold: false },
+    { text: "CARBON-NEUTRAL BLOCKCHAIN", gold: false },
+    { text: `${listings.length} ACTIVE LISTINGS`, gold: true },
+    { text: "BLOCK FINALITY  ~3.6s", gold: false },
+    { text: "POWERED BY ALGORAND", gold: false },
+    { text: "UNITRADE P2P MARKETPLACE", gold: true },
+  ];
 
   return (
     <>
-      <header style={{ background: "#0a0f1edd", backdropFilter: "blur(12px)", borderBottom: "1px solid #1f2937", padding: "0 24px", position: "sticky", top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", gap: 16, height: 64, flexWrap: "wrap" }}>
-          <div style={{ fontSize: 22, fontWeight: 900, color: "#f9fafb", letterSpacing: -0.5, flexShrink: 0, cursor: "pointer" }} onClick={() => setTab("browse")}>
-            <span style={{ color: "#6366f1" }}>⬡</span> UniTrade
-          </div>
-
-          {greenTrades > 0 && (
-            <div style={{ background: "#064e3b33", border: "1px solid #06543555", borderRadius: 20, padding: "4px 12px", fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace", display: "flex", alignItems: "center", gap: 4 }}>
-              🌿 {co2Saved} kg CO2 saved
+      {/* ── TICKER TAPE ── */}
+      <div className="ticker-bar">
+        <div className="ticker-track">
+          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
+            <div key={i} className={`ticker-item${item.gold ? " gold" : ""}`}>
+              {i === 0 || i === TICKER_ITEMS.length ? <span className="live-dot" /> : null}
+              {item.text}
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── NAVBAR ── */}
+      <header className="navbar">
+        <div className="nav-logo" onClick={() => setTab("browse")}>
+          ⬡ UNITRADE
+        </div>
+
+        <nav className="nav-links">
+          {["browse", "my-orders", "listed-offers", "wishlist"].map(t => (
+            <button
+              key={t}
+              className={`nav-link${tab === t ? " active" : ""}`}
+              onClick={() => setTab(t)}
+            >
+              {TAB_LABELS[t]}
+            </button>
+          ))}
+        </nav>
+
+        {/* Right side */}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
+          {greenTrades > 0 && (
+            <div className="co2-chip">🌿 +{co2Saved} kg CO₂</div>
           )}
 
-          <div style={{ display: "flex", gap: 4, marginLeft: 8 }}>
-            {["browse", "my-orders", "listed-offers", "wishlist"].map((targetTab) => (
-              <button key={targetTab} onClick={() => setTab(targetTab)} style={tabStyle(targetTab)}>
-                {targetTab === "browse"
-                  ? "Browse"
-                  : targetTab === "my-orders"
-                    ? `My Orders ${myOrders.length ? `(${myOrders.length})` : ""}`
-                    : targetTab === "listed-offers"
-                      ? `Listed Offers ${listedOfferOrders.length ? `(${listedOfferOrders.length})` : ""}`
-                      : `♡ ${wishlistCount || ""}`}
-              </button>
-            ))}
-          </div>
+          {verified && (
+            <div className="verified-chip">✓ VERIFIED STUDENT</div>
+          )}
 
-          <div style={{ marginLeft: "auto", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            {userId && (
-              <div style={{ background: "#1f2937", borderRadius: 8, padding: "4px 10px", fontSize: 11, color: "#9ca3af", fontFamily: "'DM Mono', monospace" }}>
-                user {truncate(userId)}
-              </div>
-            )}
+          {accountAddress && !verified && (
+            <button
+              onClick={() => setShowVerify(true)}
+              className="btn-outline"
+              style={{ padding: "6px 14px", fontSize: 10, letterSpacing: "0.14em" }}
+            >
+              VERIFY
+            </button>
+          )}
 
-            {accountAddress && (
-              <button
-                onClick={() => setShowMap(true)}
-                title="IEC Ghaziabad Meetup Map"
-                style={{ background: "#1f2937", border: "1px solid #374151", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 14, transition: "border-color .2s" }}
-                onMouseEnter={(event) => { event.currentTarget.style.borderColor = "#6366f1"; }}
-                onMouseLeave={(event) => { event.currentTarget.style.borderColor = "#374151"; }}
-              >
-                📍
-              </button>
-            )}
+          {accountAddress && userId && (
+            <button
+              className="btn-outline"
+              onClick={() => {
+                if (!verified) { showToast("Verify your student email first.", "error"); setShowVerify(true); return; }
+                setShowSell(true);
+              }}
+              style={{ padding: "6px 14px", fontSize: 10, letterSpacing: "0.14em" }}
+            >
+              + LIST
+            </button>
+          )}
 
-            {accountAddress && !verified && (
-              <button
-                onClick={() => setShowVerify(true)}
-                style={{ padding: "6px 14px", borderRadius: 8, border: "1px solid #f59e0b55", background: "#f59e0b15", color: "#f59e0b", cursor: "pointer", fontWeight: 600, fontSize: 12, fontFamily: "'DM Mono', monospace" }}
-              >
-                🎓 Verify
-              </button>
-            )}
+          {accountAddress && (
+            <button
+              onClick={() => setShowMap(true)}
+              className="btn-outline"
+              style={{ padding: "6px 12px", fontSize: 13, letterSpacing: 0 }}
+              title="Campus meetup map"
+            >📍</button>
+          )}
 
-            {verified && (
-              <div style={{ background: "#10b98122", border: "1px solid #10b98155", borderRadius: 8, padding: "4px 10px", fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace" }}>
-                ✓ Verified
-              </div>
-            )}
-
-            {accountAddress && userId && (
-              <button
-                onClick={() => {
-                  if (!verified) {
-                    showToast("Please verify your student email first!", "error");
-                    setShowVerify(true);
-                    return;
-                  }
-                  setShowSell(true);
-                }}
-                style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #6366f1", background: "none", color: "#6366f1", cursor: "pointer", fontWeight: 700, fontSize: 14, fontFamily: "'DM Mono', monospace", transition: "all .2s" }}
-                onMouseEnter={(event) => { event.currentTarget.style.background = "#6366f122"; }}
-                onMouseLeave={(event) => { event.currentTarget.style.background = "none"; }}
-              >
-                + Sell
-              </button>
-            )}
-
-            {!accountAddress ? (
-              <button onClick={connectWallet} style={{ padding: "9px 20px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 14, fontFamily: "'DM Mono', monospace" }}>
-                Connect Pera
-              </button>
-            ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                {balance !== null && (
-                  <div style={{ background: "linear-gradient(135deg, #064e3b44, #065f4644)", border: "1px solid #10b98155", borderRadius: 8, padding: "6px 12px", fontSize: 13, fontFamily: "'DM Mono', monospace", color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
-                    💰 {balance.toFixed(3)} ALGO
-                  </div>
-                )}
-                <div style={{ background: "#1f2937", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontFamily: "'DM Mono', monospace", color: "#a5b4fc", display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#10b981", display: "inline-block" }} />
-                  {truncate(accountAddress)}
+          {!accountAddress ? (
+            <button className="btn-gold" onClick={connectWallet} style={{ padding: "8px 20px", fontSize: 11 }}>
+              CONNECT PERA
+            </button>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {balance !== null && (
+                <div className="wallet-balance">
+                  <span className="live-indicator" />
+                  {balance.toFixed(3)} ALGO
                 </div>
-                <button onClick={disconnectWallet} style={{ background: "none", border: "1px solid #374151", borderRadius: 8, padding: "6px 12px", color: "#6b7280", cursor: "pointer", fontSize: 13 }}>↩</button>
+              )}
+              <div className="wallet-address">
+                {truncate(accountAddress)}
               </div>
-            )}
-          </div>
+              <button
+                onClick={disconnectWallet}
+                className="btn-outline"
+                style={{ padding: "6px 12px", fontSize: 12 }}
+                title="Disconnect"
+              >↩</button>
+            </div>
+          )}
         </div>
       </header>
 
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+      {/* ── MAIN ── */}
+      <div className="content-wrapper">
+
+        {/* ══ BROWSE TAB ══ */}
         {tab === "browse" && (
-          <>
-            <div style={{ textAlign: "center", marginBottom: 48 }}>
-              <div style={{ display: "inline-block", background: "#6366f122", border: "1px solid #6366f144", borderRadius: 20, padding: "4px 14px", fontSize: 12, color: "#a5b4fc", fontFamily: "'DM Mono', monospace", marginBottom: 16 }}>
-                ⚡ Powered by Algorand TestNet · Carbon-Negative Blockchain
+          <div className="main-layout">
+
+            {/* Hero */}
+            <section className="hero-section">
+              <div className="hero-left">
+                <div className="hero-label">Campus P2P · Powered by Algorand</div>
+                <h1 className="hero-headline">
+                  The Campus<br />Marketplace.<br /><em>Reimagined.</em>
+                </h1>
+                <p className="hero-body">
+                  Buy and sell with classmates. Near-zero transaction fees,
+                  instant finality, and full on-chain transparency. The future
+                  of campus commerce is here.
+                </p>
+                {/* Stats */}
+                <div className="hero-stats">
+                  <div className="stat-box">
+                    <span className="stat-num">{listings.length}</span>
+                    <span className="stat-lbl">Active Listings</span>
+                  </div>
+                  <div className="stat-box">
+                    <span className="stat-num">&lt;0.001</span>
+                    <span className="stat-lbl">ALGO Fee</span>
+                  </div>
+                  <div className="stat-box">
+                    <span className="stat-num">100%</span>
+                    <span className="stat-lbl">Carbon-Neutral</span>
+                  </div>
+                </div>
+
+                {!accountAddress && (
+                  <div style={{ marginTop: 8 }}>
+                    <button className="btn-gold" onClick={connectWallet} style={{ padding: "14px 32px", fontSize: 12 }}>
+                      CONNECT PERA WALLET →
+                    </button>
+                  </div>
+                )}
               </div>
-              <h1 style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 900, lineHeight: 1.1, marginBottom: 16, background: "linear-gradient(135deg,#f9fafb 40%,#a5b4fc)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Buy &amp; Sell on Campus<br />with Crypto
-              </h1>
-              <p style={{ color: "#6b7280", fontSize: 16, maxWidth: 520, margin: "0 auto" }}>
-                Peer-to-peer marketplace for students. Low fees ({"<"}₹0.10), instant settlement, full transparency on Algorand.
-              </p>
-              <div style={{ display: "flex", justifyContent: "center", gap: 32, marginTop: 28, flexWrap: "wrap" }}>
-                {[["📦", listings.length, "Listings"], ["⚡", "<0.001 ALGO", "Txn Fee"], ["🌿", "Carbon-Negative", "Network"], ["🎓", verified ? "Verified" : "Open", "Status"]].map(([icon, value, label]) => (
-                  <div key={label} style={{ textAlign: "center" }}>
-                    <div style={{ fontSize: 24, marginBottom: 4 }}>{icon}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: "#a5b4fc", fontFamily: "'DM Mono', monospace" }}>{value}</div>
-                    <div style={{ fontSize: 11, color: "#4b5563" }}>{label}</div>
+
+              <div className="hero-right">
+                {featuredListing ? (
+                  <div className="featured-card">
+                    <div className="featured-thumb">{featuredListing.image}</div>
+                    <div className="featured-body">
+                      <div className="featured-label">Featured Listing</div>
+                      <div className="featured-title">{featuredListing.title}</div>
+                      <span className="featured-price">{featuredListing.price} <span style={{ fontSize: 16, color: "var(--gold-muted)" }}>ALGO</span></span>
+                      <hr className="featured-hr" />
+                      <div className="featured-tag">≈ ₹{(featuredListing.price * 15).toLocaleString("en-IN")} INR · {featuredListing.condition}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", color: "var(--text-dim)", fontFamily: "'Space Mono', monospace", fontSize: 11, letterSpacing: "0.12em" }}>
+                    NO LISTINGS YET
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Error */}
+            {(authError || listingsError || wishlistError) && (
+              <div className="error-banner">
+                {[authError, listingsError, wishlistError].filter(Boolean).join(" · ")}
+              </div>
+            )}
+
+            {/* Price Range */}
+            <div className="price-row" style={{ height: "auto", minHeight: 48, padding: "12px 48px" }}>
+              <span className="price-label">Price Range</span>
+              <input
+                type="range" min="0" max={absoluteMaxPrice} step="0.1"
+                value={priceRange[1]}
+                onChange={(e) => setPriceRange([priceRange[0], parseFloat(e.target.value)])}
+              />
+              <span className="price-val">0 – {priceRange[1]} ALGO</span>
+            </div>
+
+            {/* Condition filter */}
+            <div className="cond-row" style={{ height: "auto", minHeight: 48, padding: "12px 48px" }}>
+              <span className="cond-label">Condition:</span>
+              <div style={{ display: "flex", gap: 16, overflowX: "auto", scrollbarWidth: "none" }}>
+                {CONDITIONS.map(item => (
+                  <button
+                    key={item}
+                    className={`cat-link${condFilter === item ? " active" : ""}`}
+                    onClick={() => setCondFilter(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Filter + Categories */}
+            <div className="filter-bar">
+              <div className="filter-search">
+                <span className="filter-search-icon">⌕</span>
+                <input
+                  placeholder="Search listings…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="filter-divider" />
+
+              <div className="filter-cats">
+                {CATEGORIES.map(item => (
+                  <button
+                    key={item}
+                    className={`cat-link${category === item ? " active" : ""}`}
+                    onClick={() => setCategory(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              <div className="filter-right">
+                <select
+                  className="select-obsidian"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  style={{ height: 38, minWidth: 120, fontSize: 10, letterSpacing: "0.12em" }}
+                >
+                  <option value="newest">NEWEST</option>
+                  <option value="price-asc">PRICE ↑</option>
+                  <option value="price-desc">PRICE ↓</option>
+                  <option value="rating">TOP RATED</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Listings grid */}
+            {(authLoading || listingsLoading) ? (
+              <div className="loading-state">
+                <div className="spinner" />
+                <div className="loading-text">Syncing Marketplace…</div>
+              </div>
+            ) : filteredListings.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon" style={{ animation: "float 3s ease-in-out infinite" }}>◌</div>
+                <div className="empty-title">No Listings Found.</div>
+                <div className="empty-sub">Adjust your search or filters.</div>
+                <button className="btn-outline" onClick={() => { setSearch(""); setCategory("All"); setCondFilter("All"); }}>
+                  CLEAR FILTERS
+                </button>
+              </div>
+            ) : (
+              <div className="card-grid">
+                {filteredListings.map((listing) => (
+                  <div key={listing.id} className="card-grid-item">
+                    <ListingCard
+                      listing={listing}
+                      accountAddress={accountAddress}
+                      currentUserId={userId}
+                      onBuy={setCheckoutItem}
+                      wishlist={wishlistIds}
+                      onToggleWishlist={handleWishlistToggle}
+                      onChat={setChatListing}
+                      onDelete={handleDeleteListing}
+                    />
                   </div>
                 ))}
               </div>
-            </div>
-
-            {(authError || listingsError || wishlistError) && (
-              <div style={{ marginBottom: 14, background: "#7f1d1d33", border: "1px solid #ef444466", borderRadius: 10, padding: "10px 12px", fontSize: 12, color: "#fca5a5" }}>
-                {[authError, listingsError, wishlistError].filter(Boolean).join(" | ")}
-              </div>
             )}
-
-            <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-              <input style={{ ...inputStyle, flex: "1 1 240px", background: "#111827" }} placeholder="🔍 Search listings..." value={search} onChange={(event) => setSearch(event.target.value)} />
-              <select style={{ ...inputStyle, width: "auto", background: "#111827" }} value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                <option value="newest">Newest</option>
-                <option value="price-asc">Price ↑</option>
-                <option value="price-desc">Price ↓</option>
-                <option value="rating">Top Rated</option>
-              </select>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12, color: "#6b7280", fontFamily: "'DM Mono', monospace" }}>Price:</span>
-              <input
-                type="range"
-                min="0"
-                max="50"
-                step="0.5"
-                value={priceRange[1]}
-                onChange={(event) => setPriceRange([priceRange[0], parseFloat(event.target.value)])}
-                style={{ flex: "0 1 200px", accentColor: "#6366f1" }}
-              />
-              <span style={{ fontSize: 12, color: "#a5b4fc", fontFamily: "'DM Mono', monospace" }}>0 - {priceRange[1]} ALGO</span>
-            </div>
-
-            <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
-              {CATEGORIES.map((item) => (
-                <button key={item} onClick={() => setCategory(item)}
-                  style={{ padding: "6px 16px", borderRadius: 20, border: `1px solid ${category === item ? "#6366f1" : "#1f2937"}`, background: category === item ? "#6366f122" : "none", color: category === item ? "#a5b4fc" : "#6b7280", cursor: "pointer", fontSize: 13, fontWeight: 600, transition: "all .15s" }}>
-                  {item}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: "flex", gap: 8, marginBottom: 32, flexWrap: "wrap" }}>
-              {CONDITIONS.map((item) => (
-                <button key={item} onClick={() => setCondFilter(item)}
-                  style={{ padding: "4px 12px", borderRadius: 14, border: `1px solid ${condFilter === item ? "#8b5cf6" : "#1f2937"}`, background: condFilter === item ? "#8b5cf622" : "none", color: condFilter === item ? "#c4b5fd" : "#4b5563", cursor: "pointer", fontSize: 12, fontWeight: 600, transition: "all .15s" }}>
-                  {item}
-                </button>
-              ))}
-            </div>
-
-            {(authLoading || listingsLoading) ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>Syncing marketplace...</div>
-              </div>
-            ) : filteredListings.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>No listings found</div>
-                <div style={{ fontSize: 14, marginTop: 8 }}>Try a different search or category</div>
-              </div>
-            ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-                {filteredListings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    accountAddress={accountAddress}
-                    currentUserId={userId}
-                    onBuy={setCheckoutItem}
-                    wishlist={wishlistIds}
-                    onToggleWishlist={handleWishlistToggle}
-                    onChat={setChatListing}
-                    onDelete={handleDeleteListing}
-                  />
-                ))}
-              </div>
-            )}
-
-            {!accountAddress && (
-              <div style={{ textAlign: "center", marginTop: 40, padding: 24, background: "#111827", borderRadius: 16, border: "1px dashed #374151" }}>
-                <p style={{ color: "#6b7280", marginBottom: 12 }}>Connect your Pera Wallet to buy or sell items</p>
-                <button onClick={connectWallet} style={{ padding: "10px 24px", borderRadius: 10, border: "none", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff", cursor: "pointer", fontWeight: 700, fontFamily: "'DM Mono', monospace" }}>
-                  Connect Pera Wallet
-                </button>
-              </div>
-            )}
-          </>
+          </div>
         )}
 
+        {/* ══ MY ORDERS ══ */}
         {tab === "my-orders" && (
-          <>
-            <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>My Orders</h2>
-            <p style={{ color: "#6b7280", marginBottom: 32, fontSize: 14 }}>Orders where you are the buyer</p>
-
-            {ordersError && (
-              <div style={{ marginBottom: 14, background: "#7f1d1d33", border: "1px solid #ef444466", borderRadius: 10, padding: "10px 12px", fontSize: 12, color: "#fca5a5" }}>
-                Firestore order sync issue: {ordersError}
+          <div className="main-layout">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">My Orders.</h2>
+                <div className="section-sub">Orders where you are the buyer</div>
               </div>
-            )}
+            </div>
+
+            {ordersError && <div className="error-banner">{ordersError}</div>}
 
             {ordersLoading ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>Loading your purchases...</div>
-              </div>
+              <div className="loading-state"><div className="spinner" /><div className="loading-text">Loading Orders…</div></div>
             ) : myOrders.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>📦</div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>No buyer orders yet</div>
-                <div style={{ fontSize: 14, marginTop: 8 }}>Orders you place will appear here</div>
-                <button onClick={() => setTab("browse")} style={{ marginTop: 20, padding: "10px 24px", borderRadius: 10, border: "none", background: "#6366f1", color: "#fff", cursor: "pointer", fontWeight: 700 }}>Browse Listings</button>
+              <div className="empty-state">
+                <div className="empty-icon">◌</div>
+                <div className="empty-title">No Orders Yet.</div>
+                <div className="empty-sub">Orders you place will appear here</div>
+                <button className="btn-gold" onClick={() => setTab("browse")} style={{ fontSize: 11 }}>BROWSE LISTINGS</button>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {myOrders.map((order) => (
-                  <OrderRow
-                    key={order.id}
-                    order={order}
-                    currentUserId={userId}
-                    onRate={handleRate}
-                    onVerifyOtp={handleVerifyOtp}
-                    onRegenerateOtp={handleRegenerateOtp}
-                    onReleasePayment={handleReleasePayment}
-                    onCancelOrder={handleCancelOrder}
-                    actionLoading={orderActionId === order.id}
+              <div style={{ padding: "24px 48px", display: "flex", flexDirection: "column", gap: 2 }}>
+                {myOrders.map(order => (
+                  <OrderRow key={order.id} order={order} currentUserId={userId}
+                    onRate={handleRate} onVerifyOtp={handleVerifyOtp}
+                    onRegenerateOtp={handleRegenerateOtp} onReleasePayment={handleReleasePayment}
+                    onCancelOrder={handleCancelOrder} actionLoading={orderActionId === order.id}
+                    onViewReceipt={setReceiptOrder}
                   />
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
+        {/* ══ LISTED OFFERS ══ */}
         {tab === "listed-offers" && (
-          <>
-            <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>Listed Offers</h2>
-            <p style={{ color: "#6b7280", marginBottom: 32, fontSize: 14 }}>Orders where you are the seller</p>
+          <div className="main-layout">
+            <div className="section-header" style={{ borderBottom: "none" }}>
+              <div>
+                <h2 className="section-title">Seller Hub.</h2>
+                <div className="section-sub">Manage your items for sale and incoming orders</div>
+              </div>
+            </div>
 
-            {ordersError && (
-              <div style={{ marginBottom: 14, background: "#7f1d1d33", border: "1px solid #ef444466", borderRadius: 10, padding: "10px 12px", fontSize: 12, color: "#fca5a5" }}>
-                Firestore order sync issue: {ordersError}
+            {/* My Active Listings Section */}
+            {myActiveListings.length > 0 && (
+              <div style={{ padding: "0 48px 48px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+                  <h3 style={{ 
+                    fontFamily: "'Space Mono', monospace", 
+                    fontSize: 14, 
+                    letterSpacing: "0.1em", 
+                    color: "var(--gold)", 
+                    textTransform: "uppercase" 
+                  }}>Active Listings ({myActiveListings.length})</h3>
+                  <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+                </div>
+                
+                <div className="card-grid" style={{ borderTop: "1px solid var(--border)" }}>
+                  {myActiveListings.map(listing => (
+                    <div key={listing.id} className="card-grid-item">
+                      <ListingCard
+                        listing={listing}
+                        accountAddress={accountAddress}
+                        currentUserId={userId}
+                        onBuy={() => {}}
+                        wishlist={wishlistIds}
+                        onToggleWishlist={handleWishlistToggle}
+                        onChat={setChatListing}
+                        onDelete={handleDeleteListing}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
+
+            <div style={{ padding: "0 48px 24px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 0 }}>
+                <h3 style={{ 
+                  fontFamily: "'Space Mono', monospace", 
+                  fontSize: 14, 
+                  letterSpacing: "0.1em", 
+                  color: "var(--gold)", 
+                  textTransform: "uppercase" 
+                }}>Incoming Orders ({listedOfferOrders.length})</h3>
+                <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              </div>
+            </div>
+
+            {ordersError && <div className="error-banner">{ordersError}</div>}
 
             {ordersLoading ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>Loading your listed-offer orders...</div>
-              </div>
+              <div className="loading-state"><div className="spinner" /><div className="loading-text">Loading Hub…</div></div>
             ) : listedOfferOrders.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🛍️</div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>No listed offers yet</div>
-                <div style={{ fontSize: 14, marginTop: 8 }}>Orders on your listings will appear here</div>
-                <button onClick={() => setShowSell(true)} style={{ marginTop: 20, padding: "10px 24px", borderRadius: 10, border: "none", background: "#6366f1", color: "#fff", cursor: "pointer", fontWeight: 700 }}>List an Item</button>
+              <div className="empty-state" style={{ padding: "60px 48px" }}>
+                <div className="empty-icon">◌</div>
+                <div className="empty-title">No Active Orders.</div>
+                <div className="empty-sub">When students buy your items, orders will appear here</div>
+                {myActiveListings.length === 0 && (
+                  <button className="btn-gold" onClick={() => setShowSell(true)} style={{ fontSize: 11 }}>LIST AN ITEM</button>
+                )}
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {listedOfferOrders.map((order) => (
-                  <OrderRow
-                    key={order.id}
-                    order={order}
-                    currentUserId={userId}
-                    onRate={handleRate}
-                    onVerifyOtp={handleVerifyOtp}
-                    onRegenerateOtp={handleRegenerateOtp}
-                    onReleasePayment={handleReleasePayment}
-                    onCancelOrder={handleCancelOrder}
-                    actionLoading={orderActionId === order.id}
+              <div style={{ padding: "0 48px 48px", display: "flex", flexDirection: "column", gap: 2 }}>
+                {listedOfferOrders.map(order => (
+                  <OrderRow key={order.id} order={order} currentUserId={userId}
+                    onRate={handleRate} onVerifyOtp={handleVerifyOtp}
+                    onRegenerateOtp={handleRegenerateOtp} onReleasePayment={handleReleasePayment}
+                    onCancelOrder={handleCancelOrder} actionLoading={orderActionId === order.id}
+                    onViewReceipt={setReceiptOrder}
                   />
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
+        {/* ══ WISHLIST ══ */}
         {tab === "wishlist" && (
-          <>
-            <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>♡ Wishlist</h2>
-            <p style={{ color: "#6b7280", marginBottom: 32, fontSize: 14 }}>Items you've saved for later</p>
+          <div className="main-layout">
+            <div className="section-header">
+              <div>
+                <h2 className="section-title">Saved.</h2>
+                <div className="section-sub">Items you've saved for later</div>
+              </div>
+            </div>
 
             {wishlistLoading ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>Syncing wishlist...</div>
-              </div>
+              <div className="loading-state"><div className="spinner" /><div className="loading-text">Syncing Wishlist…</div></div>
             ) : wishlistListings.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "80px 0", color: "#4b5563" }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>💭</div>
-                <div style={{ fontSize: 18, fontWeight: 700 }}>Your wishlist is empty</div>
-                <div style={{ fontSize: 14, marginTop: 8 }}>Tap the heart icon on any listing to save it</div>
-                <button onClick={() => setTab("browse")} style={{ marginTop: 20, padding: "10px 24px", borderRadius: 10, border: "none", background: "#6366f1", color: "#fff", cursor: "pointer", fontWeight: 700 }}>Browse Listings</button>
+              <div className="empty-state">
+                <div className="empty-icon">◌</div>
+                <div className="empty-title">Nothing Saved.</div>
+                <div className="empty-sub">Tap ♡ on any listing to save it</div>
+                <button className="btn-gold" onClick={() => setTab("browse")} style={{ fontSize: 11 }}>BROWSE LISTINGS</button>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
-                {wishlistListings.map((listing) => (
-                  <ListingCard
-                    key={listing.id}
-                    listing={listing}
-                    accountAddress={accountAddress}
-                    currentUserId={userId}
-                    onBuy={setCheckoutItem}
-                    wishlist={wishlistIds}
-                    onToggleWishlist={handleWishlistToggle}
-                    onChat={setChatListing}
-                    onDelete={handleDeleteListing}
-                  />
+              <div className="card-grid">
+                {wishlistListings.map(listing => (
+                  <div key={listing.id} className="card-grid-item">
+                    <ListingCard listing={listing} accountAddress={accountAddress}
+                      currentUserId={userId} onBuy={setCheckoutItem} wishlist={wishlistIds}
+                      onToggleWishlist={handleWishlistToggle} onChat={setChatListing}
+                      onDelete={handleDeleteListing}
+                    />
+                  </div>
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
-      </main>
+      </div>
 
+      {/* ── MODALS ── */}
       {checkoutItem && (
-        <CheckoutModal
-          listing={checkoutItem}
-          accountAddress={accountAddress}
-          balance={balance}
-          onClose={() => setCheckoutItem(null)}
-          onConfirm={handlePayment}
+        <CheckoutModal listing={checkoutItem} accountAddress={accountAddress} balance={balance}
+          onClose={() => setCheckoutItem(null)} onConfirm={handlePayment}
         />
       )}
       {showSell && (
-        <SellModal
-          accountAddress={accountAddress}
-          onClose={() => setShowSell(false)}
-          onList={handleListItem}
-        />
+        <SellModal accountAddress={accountAddress} onClose={() => setShowSell(false)} onList={handleListItem} />
       )}
       {showVerify && (
         <VerifyModal
           onClose={() => setShowVerify(false)}
-          onVerify={(email) => {
-            setVerified(true);
-            setVerifiedEmail(email);
-            showToast("Student verified! You can now sell items.", "success");
+          onVerify={async (email) => { 
+            try {
+              await updateProfile({ verified: true, email });
+              showToast("STUDENT VERIFIED. YOU MAY NOW LIST ITEMS.", "success"); 
+            } catch (err) {
+              showToast("SYNC FAILED. TRY AGAIN.", "error");
+            }
           }}
         />
       )}
       {showMap && <MapModal onClose={() => setShowMap(false)} />}
       {chatListing && (
-        <ChatDrawer
-          listing={chatListing}
-          currentUserId={userId}
-          onClose={() => setChatListing(null)}
-          onBuy={setCheckoutItem}
-          onOfferAccepted={handleOfferAccepted}
-          showToast={showToast}
+        <ChatDrawer listing={chatListing} currentUserId={userId}
+          onClose={() => setChatListing(null)} onBuy={setCheckoutItem}
+          onOfferAccepted={handleOfferAccepted} showToast={showToast}
         />
+      )}
+      {receiptOrder && (
+        <ReceiptModal order={receiptOrder} onClose={() => setReceiptOrder(null)} />
       )}
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
     </>

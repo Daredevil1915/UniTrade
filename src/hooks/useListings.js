@@ -78,9 +78,10 @@ export function useListings(userId) {
     await createListing({ ...listingInput, ownerId: userId });
   }, [userId]);
 
-  const deleteListing = useCallback(async (listingId) => {
-    if (!userId) throw new Error("You must be signed in to delete listings.");
-    await removeListing(listingId, userId);
+  const deleteListing = useCallback(async (listingId, requesterId) => {
+    const id = requesterId || userId;
+    if (!id) throw new Error("You must be signed in to delete listings.");
+    await removeListing(listingId, id);
   }, [userId]);
 
   const editListing = useCallback(async (listingId, updates) => {

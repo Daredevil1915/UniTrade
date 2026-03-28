@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { labelStyle, truncate } from "./Shared";
 
 const CAMPUS_LOCATIONS = [
     "IEC Main Gate",
@@ -15,84 +16,99 @@ export default function CheckoutModal({ listing, onClose, onConfirm, accountAddr
     const sellerAddress = listing.sellerAddress || listing.seller?.walletAddress || listing.seller;
     const fee = 0.001;
     return (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={e => e.target === e.currentTarget && !loading && onClose()}>
-            <div style={{ background: "#0f172a", border: "1px solid #1f2937", borderRadius: 20, padding: 32, width: "100%", maxWidth: 420, animation: "scaleIn .25s ease" }}>
-                <div style={{ fontSize: 52, textAlign: "center", marginBottom: 16 }}>{listing.image}</div>
-                <h2 style={{ margin: "0 0 8px", color: "#f9fafb", textAlign: "center", fontSize: 20 }}>{listing.title}</h2>
-                <p style={{ margin: "0 0 24px", color: "#6b7280", textAlign: "center", fontSize: 14 }}>{listing.description}</p>
+        <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && !loading && onClose()}>
+            <div className="modal-panel" style={{ maxWidth: 440, padding: 40, animation: "scaleIn .25s ease" }}>
+                <div style={{ fontSize: 64, textAlign: "center", marginBottom: 24, animation: "float 4s ease-in-out infinite" }}>{listing.image}</div>
+                <h2 className="serif" style={{ margin: "0 0 12px", color: "var(--text)", textAlign: "center", fontSize: "clamp(20px, 4vw, 24px)", fontWeight: 800 }}>{listing.title.toUpperCase()}</h2>
+                <p style={{ margin: "0 0 32px", color: "var(--text-muted)", textAlign: "center", fontSize: 13, lineHeight: 1.6 }}>{listing.description}</p>
 
                 {/* Pickup Location */}
-                <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: "block", fontSize: 13, color: "#9ca3af", marginBottom: 8, fontWeight: 600 }}>Select Pickup Location</label>
+                <div style={{ marginBottom: 24 }}>
+                    <label style={labelStyle}>PICKUP LOCATION</label>
                     <select
                         value={pickupLocation}
                         onChange={e => setPickupLocation(e.target.value)}
-                        style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid #374151", background: "#111827", color: "#f9fafb", outline: "none", fontSize: 14 }}
+                        className="input-box"
+                        style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--border-mid)", background: "var(--s1)", color: "var(--text)", outline: "none", fontSize: 13, fontFamily: "'Space Mono', monospace" }}
                     >
                         {CAMPUS_LOCATIONS.map(loc => (
-                            <option key={loc} value={loc}>{loc}</option>
+                            <option key={loc} value={loc}>{loc.toUpperCase()}</option>
                         ))}
                     </select>
                 </div>
 
                 {/* Price breakdown */}
-                <div style={{ background: "#111827", borderRadius: 12, padding: 16, marginBottom: 24 }}>
-                    {[["Item Price", `${listing.price} ALGO`], ["Network Fee", `~${fee} ALGO`], ["Total", `${(listing.price + fee).toFixed(3)} ALGO`]].map(([k, v], i) => (
-                        <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 2 ? "1px solid #1f2937" : "none" }}>
-                            <span style={{ color: "#9ca3af", fontSize: 14 }}>{k}</span>
-                            <span style={{ color: i === 2 ? "#a5b4fc" : "#f9fafb", fontWeight: i === 2 ? 800 : 500, fontFamily: "'DM Mono', monospace", fontSize: i === 2 ? 16 : 14 }}>{v}</span>
+                <div style={{ background: "var(--s0)", border: "1px solid var(--border)", padding: 20, marginBottom: 24 }}>
+                    {[["ITEM PRICE", `${listing.price} ALGO`], ["NETWORK FEE", `~${fee} ALGO`], ["TOTAL", `${(listing.price + fee).toFixed(3)} ALGO`]].map(([k, v], i) => (
+                        <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
+                            <span style={{ color: "var(--text-dim)", fontSize: 11, fontFamily: "'Space Mono', monospace", letterSpacing: "0.06em" }}>{k}</span>
+                            <span style={{ color: i === 2 ? "var(--gold)" : "var(--text)", fontWeight: i === 2 ? 800 : 500, fontFamily: "'Space Mono', monospace", fontSize: i === 2 ? 18 : 14 }}>{v}</span>
                         </div>
                     ))}
                     {balance !== null && balance !== undefined && (
-                        <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 4px", borderTop: "1px solid #1f2937", marginTop: 4 }}>
-                            <span style={{ color: "#9ca3af", fontSize: 14 }}>Your Balance</span>
-                            <span style={{ color: balance >= (listing.price + fee) ? "#10b981" : "#ef4444", fontWeight: 700, fontFamily: "'DM Mono', monospace", fontSize: 14 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", padding: "12px 0 0", borderTop: "1px solid var(--border)", marginTop: 8 }}>
+                            <span style={{ color: "var(--text-dim)", fontSize: 11, fontFamily: "'Space Mono', monospace", letterSpacing: "0.06em" }}>BALANCE</span>
+                            <span style={{ color: balance >= (listing.price + fee) ? "var(--emerald)" : "var(--red)", fontWeight: 700, fontFamily: "'Space Mono', monospace", fontSize: 14 }}>
                                 {balance.toFixed(3)} ALGO
                             </span>
                         </div>
                     )}
                     {balance !== null && balance !== undefined && balance < (listing.price + fee) && (
-                        <div style={{ background: "#7f1d1d33", border: "1px solid #ef444466", borderRadius: 8, padding: "8px 12px", marginTop: 12, fontSize: 12, color: "#fca5a5", textAlign: "center" }}>
-                            ⚠️ Insufficient balance. You need at least {(listing.price + fee).toFixed(3)} ALGO.
+                        <div style={{ border: "1px solid var(--red)", padding: "10px 14px", marginTop: 16, fontSize: 11, color: "var(--red)", textAlign: "center", fontFamily: "'Space Mono', monospace" }}>
+                            ⚠️ INSUFFICIENT BALANCE. MIN NEEDED: {(listing.price + fee).toFixed(3)} ALGO.
                         </div>
                     )}
                 </div>
 
                 {/* Algorand badge */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 16, padding: "8px 16px", background: "#064e3b22", border: "1px solid #06543588", borderRadius: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 24, padding: "10px 16px", border: "1px solid rgba(0,255,148,0.15)", background: "rgba(0,255,148,0.05)" }}>
                     <span style={{ fontSize: 14 }}>🌿</span>
-                    <span style={{ fontSize: 11, color: "#10b981", fontFamily: "'DM Mono', monospace" }}>Payment releases on Algorand only after OTP verification</span>
+                    <span style={{ fontSize: 10, color: "var(--emerald)", fontFamily: "'Space Mono', monospace", letterSpacing: "0.04em" }}>PAYMENT RELEASES AFTER MEETUP OTP VERIFICATION.</span>
                 </div>
 
-                <div style={{ fontSize: 12, color: "#4b5563", fontFamily: "'DM Mono', monospace", marginBottom: 20, wordBreak: "break-all" }}>
-                    Buyer: {accountAddress}<br />Seller: {sellerAddress}
+                <div style={{ marginBottom: 32 }}>
+                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                      <div className="stat-box" style={{ padding: "12px 14px" }}>
+                        <span className="stat-lbl" style={{ fontSize: 8 }}>BUYER ADDRESS</span>
+                        <span className="stat-num" style={{ fontSize: 13, color: "var(--text-muted)" }}>{truncate(accountAddress)}</span>
+                      </div>
+                      <div className="stat-box" style={{ padding: "12px 14px" }}>
+                        <span className="stat-lbl" style={{ fontSize: 8 }}>SELLER ADDRESS</span>
+                        <span className="stat-num" style={{ fontSize: 13, color: "var(--text-muted)" }}>{truncate(sellerAddress)}</span>
+                      </div>
+                   </div>
                 </div>
 
-                <div style={{ background: "#1e293b66", border: "1px solid #334155", borderRadius: 8, padding: "8px 10px", marginBottom: 16, fontSize: 11, color: "#cbd5e1" }}>
-                    This creates a held order with OTP verification. After seller verifies OTP at meetup, buyer confirms release (ALGO or Cash handover).
-                </div>
-
-                <div style={{ display: "flex", gap: 12 }}>
-                    <button onClick={onClose} disabled={loading} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid #1f2937", background: "none", color: "#9ca3af", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
-                    <button
-                        onClick={async () => {
-                            setLoading(true);
-                            await onConfirm(pickupLocation, "cash");
-                            setLoading(false);
-                        }}
-                        disabled={loading}
-                        style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid #14532d", background: loading ? "#374151" : "#14532d", color: "#dcfce7", cursor: loading ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 15, transition: "background .2s" }}>
-                        {loading ? "Creating..." : "Cash"}
-                    </button>
-                    <button onClick={async () => { setLoading(true); await onConfirm(pickupLocation, "algo"); setLoading(false); }}
-                        disabled={loading}
-                        style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", background: loading ? "#374151" : "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff", cursor: loading ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 15, transition: "background .2s" }}>
-                        {loading ? (
-                            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                                <span style={{ animation: "pulse 1s infinite" }}>⬡</span> Creating...
-                            </span>
-                        ) : "Pay With ALGO"}
-                    </button>
+                <div style={{ display: "flex", gap: 16, flexDirection: "column" }}>
+                    <div style={{ display: "flex", gap: 16 }}>
+                        <button
+                            onClick={async () => {
+                                setLoading(true);
+                                await onConfirm(pickupLocation, "cash");
+                                setLoading(false);
+                            }}
+                            disabled={loading}
+                            className="btn-outline"
+                            style={{ flex: 1, padding: "14px 0", fontSize: 11, background: loading ? "var(--s2)" : "transparent" }}>
+                            {loading ? "PROCESSING..." : "CASH HANDOVER"}
+                        </button>
+                        <button
+                            onClick={async () => {
+                                setLoading(true);
+                                await onConfirm(pickupLocation, "algo");
+                                setLoading(false);
+                            }}
+                            disabled={loading}
+                            className="btn-gold"
+                            style={{ flex: 2, padding: "14px 0", fontSize: 11 }}>
+                            {loading ? (
+                                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                                    <span style={{ animation: "spin 1s linear infinite" }}>◌</span> PROCESSING...
+                                </span>
+                            ) : "PURCHASE WITH ALGO"}
+                        </button>
+                    </div>
+                    <button onClick={onClose} disabled={loading} className="btn-text-gold" style={{ fontSize: 11 }}>CANCEL TRANSACTION</button>
                 </div>
             </div>
         </div>

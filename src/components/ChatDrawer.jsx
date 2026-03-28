@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { truncate } from "./Shared";
+import { truncate, labelStyle } from "./Shared";
 import {
   getOrCreateChat,
   sendChatTextMessage,
@@ -17,40 +17,42 @@ function formatTimeFromIso(isoDate) {
 function OfferCard({ message, canAct, onAccept, onReject }) {
   const statusColor =
     message.offerStatus === "accepted"
-      ? "#10b981"
+      ? "var(--emerald)"
       : message.offerStatus === "rejected"
-        ? "#ef4444"
-        : "#f59e0b";
+        ? "var(--red)"
+        : "var(--amber)";
 
   const statusLabel =
     message.offerStatus === "accepted"
-      ? "Accepted"
+      ? "ACCEPTED"
       : message.offerStatus === "rejected"
-        ? "Rejected"
-        : "Pending";
+        ? "REJECTED"
+        : "PENDING";
 
   return (
-    <div style={{ background: "#111827", border: `1px solid ${statusColor}66`, borderRadius: 12, padding: 12, minWidth: 220 }}>
-      <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 6 }}>Seller offered</div>
-      <div style={{ fontSize: 18, fontWeight: 800, color: "#a5b4fc", fontFamily: "'DM Mono', monospace" }}>
+    <div style={{ background: "var(--s0)", border: `1px solid ${statusColor}`, padding: 16, minWidth: 240 }}>
+      <div style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 8, fontFamily: "'Space Mono', monospace", letterSpacing: "0.1em" }}>SELLER OFFER</div>
+      <div style={{ fontSize: 24, fontWeight: 800, color: "var(--gold)", fontFamily: "'Space Mono', monospace" }}>
         {message.offeredPrice} ALGO
       </div>
-      <div style={{ marginTop: 6, fontSize: 11, color: statusColor, fontFamily: "'DM Mono', monospace" }}>
-        Offer {statusLabel}
+      <div style={{ marginTop: 8, fontSize: 11, color: statusColor, fontFamily: "'Space Mono', monospace", letterSpacing: "0.05em" }}>
+        OFFER {statusLabel}
       </div>
       {canAct && (
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+        <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
           <button
             onClick={onAccept}
-            style={{ flex: 1, border: "none", borderRadius: 8, padding: "7px 10px", background: "#10b981", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+            className="btn-gold"
+            style={{ flex: 1, padding: "8px 0", fontSize: 11 }}
           >
-            Accept
+            ACCEPT
           </button>
           <button
             onClick={onReject}
-            style={{ flex: 1, border: "1px solid #ef444488", borderRadius: 8, padding: "7px 10px", background: "#7f1d1d22", color: "#fca5a5", fontWeight: 700, cursor: "pointer" }}
+            className="btn-outline"
+            style={{ flex: 1, padding: "8px 0", fontSize: 11, border: "1px solid var(--red-muted)", color: "var(--red)" }}
           >
-            Reject
+            REJECT
           </button>
         </div>
       )}
@@ -59,8 +61,8 @@ function OfferCard({ message, canAct, onAccept, onReject }) {
 }
 
 function getSenderLabel({ isMe, message, sellerId }) {
-  if (isMe) return "You";
-  return message.senderId === sellerId ? "Seller" : "Buyer";
+  if (isMe) return "YOU";
+  return message.senderId === sellerId ? "SELLER" : "BUYER";
 }
 
 export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onOfferAccepted, showToast }) {
@@ -85,7 +87,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
 
   useEffect(() => {
     if (!currentUserId || !listing?.id || !sellerId) {
-      setError("Unable to initialize chat.");
+      setError("UNABLE TO INITIALIZE CHAT.");
       setLoadingChat(false);
       return;
     }
@@ -103,7 +105,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         setChatId(resolvedChatId);
         setError("");
       } catch (chatError) {
-        setError(chatError.message || "Could not create chat.");
+        setError(chatError.message || "COULD NOT CREATE CHAT.");
       } finally {
         setLoadingChat(false);
       }
@@ -122,7 +124,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
           }
         },
         (snapshotError) => {
-          setError(snapshotError.message || "Failed to load listing chats.");
+          setError(snapshotError.message || "FAILED TO LOAD LISTING CHATS.");
           setLoadingChat(false);
         }
       );
@@ -143,18 +145,34 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         setError("");
       },
       (snapshotError) => {
-        setError(snapshotError.message || "Failed to sync messages.");
+        setError(snapshotError.message || "FAILED TO SYNC MESSAGES.");
       }
     );
 
     return () => unsubscribe();
   }, [chatId]);
 
+  const uniqueSellerChats = useMemo(() => {
+    const map = new Map();
+    // Sort by recent activity first to keep the most relevant one if duplicates exist
+    const sorted = [...sellerChats].sort((a, b) => {
+      const aT = a.updatedAt?.seconds || 0;
+      const bT = b.updatedAt?.seconds || 0;
+      return bT - aT;
+    });
+    for (const c of sorted) {
+      if (!map.has(c.buyerId)) {
+        map.set(c.buyerId, c);
+      }
+    }
+    return Array.from(map.values());
+  }, [sellerChats]);
+
   const currentBuyerId = useMemo(() => {
     if (!isSeller) return currentUserId;
-    const activeChat = sellerChats.find((chat) => chat.id === chatId);
+    const activeChat = uniqueSellerChats.find((chat) => chat.id === chatId);
     return activeChat?.buyerId || "";
-  }, [chatId, currentUserId, isSeller, sellerChats]);
+  }, [chatId, currentUserId, isSeller, uniqueSellerChats]);
 
   const canSendOffer = isSeller && Boolean(chatId) && Boolean(currentBuyerId);
 
@@ -166,7 +184,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
       await sendChatTextMessage(chatId, { text, senderId: currentUserId });
       setInput("");
     } catch (chatError) {
-      showToast?.(chatError.message || "Could not send message.", "error");
+      showToast?.(chatError.message || "COULD NOT SEND MESSAGE.", "error");
     }
   };
 
@@ -184,7 +202,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
       setOfferPrice("");
       setShowOfferComposer(false);
     } catch (offerError) {
-      showToast?.(offerError.message || "Could not send offer.", "error");
+      showToast?.(offerError.message || "COULD NOT SEND OFFER.", "error");
     }
   };
 
@@ -203,7 +221,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         });
       }
     } catch (actionError) {
-      showToast?.(actionError.message || "Could not update offer.", "error");
+      showToast?.(actionError.message || "COULD NOT UPDATE OFFER.", "error");
     }
   };
 
@@ -226,11 +244,12 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         key={message.id}
         style={{
           alignSelf: isMe ? "flex-end" : "flex-start",
-          maxWidth: "78%",
+          maxWidth: "85%",
           animation: "fadeIn .25s ease",
+          marginBottom: 16,
         }}
       >
-        <div style={{ fontSize: 10, color: "#6b7280", marginBottom: 4, fontFamily: "'DM Mono', monospace", textAlign: isMe ? "right" : "left" }}>
+        <div style={{ fontSize: 10, color: "var(--text-dim)", marginBottom: 6, fontFamily: "'Space Mono', monospace", textAlign: isMe ? "right" : "left", letterSpacing: "0.1em" }}>
           {getSenderLabel({ isMe, message, sellerId })}
         </div>
         {isOffer ? (
@@ -243,12 +262,12 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         ) : (
           <div
             style={{
-              background: isMe ? "linear-gradient(135deg,#6366f1,#8b5cf6)" : "#1f2937",
-              color: "#f9fafb",
-              borderRadius: isMe ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-              padding: "10px 14px",
+              background: isMe ? "var(--s2)" : "var(--s1)",
+              border: `1px solid ${isMe ? "var(--gold-dim)" : "var(--border)"}`,
+              color: isMe ? "var(--gold)" : "var(--text)",
+              padding: "12px 16px",
               fontSize: 14,
-              lineHeight: 1.45,
+              lineHeight: 1.55,
               wordBreak: "break-word",
             }}
           >
@@ -257,10 +276,10 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         )}
         <div
           style={{
-            marginTop: 4,
+            marginTop: 6,
             fontSize: 10,
-            color: "#4b5563",
-            fontFamily: "'DM Mono', monospace",
+            color: "var(--text-dim)",
+            fontFamily: "'Space Mono', monospace",
             textAlign: isMe ? "right" : "left",
           }}
         >
@@ -275,81 +294,82 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 1000, display: "flex", justifyContent: "flex-end" }}
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div style={{ width: "100%", maxWidth: 430, background: "#0f172a", borderLeft: "1px solid #1f2937", display: "flex", flexDirection: "column", animation: "slideInRight .3s ease" }}>
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid #1f2937", display: "flex", alignItems: "center", gap: 12, background: "#0d1321" }}>
-          <span style={{ fontSize: 28 }}>{listing.image}</span>
+      <div style={{ width: "100%", maxWidth: 460, background: "var(--bg)", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", animation: "slideInRight .3s ease" }}>
+        {/* Header */}
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16, background: "var(--s0)" }}>
+          <span style={{ fontSize: 32 }}>{listing.image}</span>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, color: "#f9fafb", fontSize: 15 }}>{listing.title}</div>
-            <div style={{ fontSize: 12, color: "#6b7280", fontFamily: "'DM Mono', monospace" }}>
-              {isSeller ? "Two-way chat inbox" : `Two-way chat with seller ${truncate(sellerAddress)}`}
+            <div className="serif" style={{ fontWeight: 800, color: "var(--text)", fontSize: 18 }}>UNITRADE INBOX.</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "'Space Mono', monospace", letterSpacing: "0.05em" }}>
+              {isSeller ? "MANAGING BUYER CHATS" : `CHATTING WITH ${truncate(sellerAddress)}`}
             </div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#6b7280", fontSize: 20, cursor: "pointer" }}>✕</button>
+          <button onClick={onClose} className="btn-text-gold" style={{ fontSize: 24 }}>✕</button>
         </div>
 
+        {/* Seller tabs if multiple chats */}
         {isSeller && (
-          <div style={{ borderBottom: "1px solid #1f2937", padding: "10px 12px", display: "flex", gap: 8, overflowX: "auto" }}>
+          <div style={{ borderBottom: "1px solid var(--border)", padding: "12px 16px", display: "flex", gap: 12, overflowX: "auto", background: "var(--bg)" }}>
             {sellerChats.length === 0 ? (
-              <div style={{ fontSize: 12, color: "#6b7280" }}>No buyer chats yet for this listing.</div>
-            ) : sellerChats.map((chat) => (
+              <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "'Space Mono', monospace" }}>NO BUYER CHATS YET.</div>
+            ) : uniqueSellerChats.map((chat) => (
               <button
                 key={chat.id}
                 onClick={() => setChatId(chat.id)}
+                className={`cat-link${chat.id === chatId ? " active" : ""}`}
                 style={{
-                  border: `1px solid ${chat.id === chatId ? "#6366f1" : "#374151"}`,
-                  background: chat.id === chatId ? "#6366f122" : "#1f2937",
-                  color: chat.id === chatId ? "#a5b4fc" : "#9ca3af",
-                  borderRadius: 10,
-                  padding: "6px 10px",
-                  cursor: "pointer",
-                  fontSize: 11,
-                  fontFamily: "'DM Mono', monospace",
+                  padding: "8px 14px",
+                  fontSize: 10,
                   whiteSpace: "nowrap",
                 }}
                 title={chat.lastMessageText}
               >
-                buyer {truncate(chat.buyerId)}
+                BUYER {truncate(chat.buyerId)}
               </button>
             ))}
           </div>
         )}
 
-        <div style={{ margin: "12px 16px 0", padding: "12px 16px", background: "#111827", border: "1px solid #1f2937", borderRadius: 12, display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ fontSize: 34, background: "#1f2937", borderRadius: 10, padding: "8px 12px" }}>{listing.image}</div>
+        {/* Listing preview slab */}
+        <div style={{ margin: "16px 20px 0", padding: "16px", background: "var(--s0)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ fontSize: 34, background: "var(--s2)", padding: "10px 14px" }}>{listing.image}</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#f9fafb", marginBottom: 2 }}>{listing.title}</div>
-            <div style={{ fontSize: 12, color: "#a5b4fc", fontFamily: "'DM Mono', monospace" }}>{listing.price} ALGO listed</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>{listing.title}</div>
+            <div style={{ fontSize: 12, color: "var(--gold)", fontFamily: "'Space Mono', monospace" }}>{listing.price} ALGO LISTED</div>
           </div>
           {!isSeller && (
             <button
               onClick={handleBuyAtListedPrice}
-              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", border: "none", borderRadius: 10, padding: "8px 12px", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 12, fontFamily: "'DM Mono', monospace" }}
+              className="btn-gold"
+              style={{ padding: "10px 16px", fontSize: 11 }}
             >
-              Buy Now
+              BUY NOW
             </button>
           )}
         </div>
 
         {error && (
-          <div style={{ margin: "10px 16px 0", background: "#7f1d1d33", border: "1px solid #ef444466", borderRadius: 8, padding: "8px 10px", color: "#fca5a5", fontSize: 12 }}>
+          <div style={{ margin: "16px 20px 0", border: "1px solid var(--red)", padding: "12px 16px", color: "var(--red)", fontSize: 11, fontFamily: "'Space Mono', monospace" }}>
             {error}
           </div>
         )}
 
+        {/* Seller tools */}
         {canSendOffer && (
-          <div style={{ display: "flex", gap: 6, padding: "10px 16px 0", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 12, padding: "16px 24px 0" }}>
             <button
               onClick={() => setShowOfferComposer((prev) => !prev)}
-              style={{ background: showOfferComposer ? "#6366f122" : "#1f2937", border: `1px solid ${showOfferComposer ? "#6366f1" : "#374151"}`, borderRadius: 16, padding: "5px 12px", color: showOfferComposer ? "#a5b4fc" : "#9ca3af", cursor: "pointer", fontSize: 11, fontFamily: "'DM Mono', monospace" }}
+              className="btn-outline"
+              style={{ fontSize: 10, padding: "6px 14px", background: showOfferComposer ? "var(--s1)" : "transparent" }}
             >
-              🏷️ Send Offer
+              🏷️ SEND CUSTOM OFFER
             </button>
           </div>
         )}
 
         {showOfferComposer && canSendOffer && (
-          <div style={{ margin: "8px 16px 0", padding: "10px 14px", background: "#111827", border: "1px solid #6366f144", borderRadius: 12, display: "flex", gap: 8, alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: "#9ca3af", fontFamily: "'DM Mono', monospace" }}>ALGO</span>
+          <div style={{ margin: "12px 20px 0", padding: "16px", background: "var(--s0)", border: "1px solid var(--gold-dim)", display: "flex", gap: 12, alignItems: "center" }}>
+            <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "'Space Mono', monospace" }}>OFFER ALGO</span>
             <input
               type="number"
               step="0.01"
@@ -357,24 +377,27 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
               value={offerPrice}
               onChange={(event) => setOfferPrice(event.target.value)}
               onKeyDown={(event) => event.key === "Enter" && sendOffer()}
-              placeholder="Offer price"
-              style={{ flex: 1, background: "#0f172a", border: "1px solid #374151", borderRadius: 8, padding: "8px 10px", color: "#f9fafb", fontSize: 14, outline: "none", fontFamily: "'DM Mono', monospace" }}
+              placeholder="PRICE"
+              className="input-box"
+              style={{ flex: 1, padding: "10px 14px", fontSize: 13, fontFamily: "'Space Mono', monospace" }}
             />
             <button
               onClick={sendOffer}
-              style={{ background: "linear-gradient(135deg,#6366f1,#8b5cf6)", border: "none", borderRadius: 8, padding: "8px 14px", color: "#fff", cursor: "pointer", fontWeight: 700, fontSize: 12, fontFamily: "'DM Mono', monospace" }}
+              className="btn-gold"
+              style={{ padding: "10px 20px", fontSize: 11 }}
             >
-              Send
+              SEND
             </button>
           </div>
         )}
 
-        <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* Chat window */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "24px 24px 16px", display: "flex", flexDirection: "column" }}>
           {loadingChat ? (
-            <div style={{ color: "#6b7280", fontSize: 13, textAlign: "center", paddingTop: 40 }}>Loading chat...</div>
+            <div style={{ color: "var(--text-dim)", fontSize: 11, textAlign: "center", paddingTop: 40, fontFamily: "'Space Mono', monospace" }}>SYNCING SECURE CHAT...</div>
           ) : messages.length === 0 ? (
-            <div style={{ color: "#6b7280", fontSize: 13, textAlign: "center", paddingTop: 40 }}>
-              Start the conversation.
+            <div style={{ color: "var(--text-dim)", fontSize: 12, textAlign: "center", paddingTop: 40 }}>
+              START THE CONVERSATION.
             </div>
           ) : (
             messages.map(renderMessage)
@@ -382,19 +405,22 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
           <div ref={endRef} />
         </div>
 
-        <div style={{ padding: "12px 16px", borderTop: "1px solid #1f2937", display: "flex", gap: 8, background: "#0d1321" }}>
+        {/* Input area */}
+        <div style={{ padding: "20px 24px", borderTop: "1px solid var(--border)", display: "flex", gap: 12, background: "var(--s0)" }}>
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => event.key === "Enter" && sendText()}
-            placeholder="Type a message..."
+            placeholder="TYPE A MESSAGE..."
             disabled={!chatId}
-            style={{ flex: 1, background: "#111827", border: "1px solid #374151", borderRadius: 10, padding: "10px 14px", color: "#f9fafb", fontSize: 14, outline: "none" }}
+            className="input-box"
+            style={{ flex: 1, padding: "12px 16px" }}
           />
           <button
             onClick={sendText}
             disabled={!chatId}
-            style={{ background: chatId ? "linear-gradient(135deg,#6366f1,#8b5cf6)" : "#374151", border: "none", borderRadius: 10, padding: "10px 16px", color: "#fff", cursor: chatId ? "pointer" : "not-allowed", fontWeight: 700, fontSize: 16 }}
+            className="btn-gold"
+            style={{ width: 50, height: 44, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}
           >
             ➤
           </button>

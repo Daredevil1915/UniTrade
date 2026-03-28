@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { labelStyle, inputStyle } from "./Shared";
+import { labelStyle } from "./Shared";
 import { requestListingSuggestion, toAiImagePayload } from "../services/listingAiService";
 
 const CATEGORIES = ["Books", "Electronics", "Clothing", "Furniture", "Misc"];
@@ -83,7 +83,7 @@ export default function SellModal({ onClose, onList, accountAddress }) {
         setAiError("");
 
         if (!selectedImageFile) {
-            setAiError("Upload an image first to get AI suggestions.");
+            setAiError("TERMINAL: UPLOAD IMAGE FOR ANALYTICS.");
             return;
         }
 
@@ -109,7 +109,7 @@ export default function SellModal({ onClose, onList, accountAddress }) {
             setAiPriceJudgement(suggestion.priceJudgement);
             setAiAlgoInrRate(suggestion.algoInrRate);
         } catch (analysisError) {
-            setAiError(analysisError?.message || "AI analysis failed. You can still enter details manually.");
+            setAiError(analysisError?.message || "AI ANALYSIS FAILED. MANUAL ENTRY ENABLED.");
         } finally {
             setAnalyzingImage(false);
         }
@@ -117,7 +117,7 @@ export default function SellModal({ onClose, onList, accountAddress }) {
 
     const handleSubmit = async () => {
         if (!form.title || !form.price || !form.description) {
-            setError("Please complete all required fields.");
+            setError("ALL FIELDS ARE MANDATORY FOR LEDGER ENTRY.");
             return;
         }
 
@@ -128,103 +128,130 @@ export default function SellModal({ onClose, onList, accountAddress }) {
             await withTimeout(
                 onList({ ...form, price: parseFloat(form.price), sellerAddress: accountAddress }),
                 15000,
-                "Listing is taking too long. Check Firebase Auth/Firestore rules and retry."
+                "LISTING TIMEOUT. CHECK NETWORK STATE."
             );
             onClose();
         } catch (submitError) {
-            setError(submitError?.message || "Could not publish your listing. Please try again.");
+            setError(submitError?.message || "TRANSACTION FAILED. RETRY.");
         } finally {
             setSubmitting(false);
         }
     };
 
     return (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.75)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={e => e.target === e.currentTarget && onClose()}>
-            <div style={{ background: "#0f172a", border: "1px solid #1f2937", borderRadius: 20, padding: 32, width: "100%", maxWidth: 480, maxHeight: "90vh", overflowY: "auto", animation: "scaleIn .25s ease" }}>
-                <h2 style={{ margin: "0 0 24px", color: "#f9fafb", fontSize: 20, fontWeight: 800 }}>📦 List an Item</h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                    <div>
-                        <label style={labelStyle}>Upload Image (Temporary, AI only)</label>
+        <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+            <div className="modal-panel" style={{ maxWidth: 520, padding: "40px 32px", maxHeight: "90vh", overflowY: "auto" }}>
+                <h2 className="serif" style={{ margin: "0 0 32px", color: "var(--text)", fontSize: 24, fontWeight: 800 }}>📦 NEW LISTING.</h2>
+                <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                    
+                    {/* Media Upload */}
+                    <div style={{ background: "var(--s0)", border: "1px solid var(--border)", padding: 24 }}>
+                        <label style={labelStyle}>AI IMAGE ANALYSIS</label>
                         <input
                             type="file"
                             accept="image/*"
                             onChange={handleImageSelection}
-                            style={{ ...inputStyle, padding: 8 }}
+                            className="input-box"
+                            style={{ padding: 10, fontSize: 11, marginBottom: 16 }}
                         />
                         {imagePreviewUrl && (
                             <img
                                 src={imagePreviewUrl}
-                                alt="Selected listing preview"
-                                style={{ marginTop: 10, width: "100%", maxHeight: 180, objectFit: "cover", borderRadius: 10, border: "1px solid #1f2937" }}
+                                alt="Preview"
+                                style={{ width: "100%", height: 200, objectFit: "cover", border: "1px solid var(--border-mid)", marginBottom: 16 }}
                             />
                         )}
                         <button
                             onClick={handleAnalyzeImage}
                             disabled={!selectedImageFile || analyzingImage}
-                            style={{ marginTop: 10, width: "100%", padding: "10px 12px", borderRadius: 10, border: "1px solid #374151", background: analyzingImage ? "#374151" : "#1f2937", color: "#f9fafb", cursor: !selectedImageFile || analyzingImage ? "not-allowed" : "pointer", fontWeight: 600 }}
+                            className="btn-outline"
+                            style={{ width: "100%", padding: "12px", background: analyzingImage ? "var(--s1)" : "transparent", fontSize: 11 }}
                         >
-                            {analyzingImage ? "Analyzing image..." : "Generate AI Title, Description & Price"}
+                            {analyzingImage ? "ANALYZING..." : "GENERATE AI METADATA →"}
                         </button>
-                        <div style={{ marginTop: 8, color: "#9ca3af", fontSize: 12 }}>
-                            Image is processed in-memory and is not stored in Firebase or database.
-                        </div>
                     </div>
+
+                    {/* Icon Selection */}
                     <div>
-                        <label style={labelStyle}>Pick an Icon</label>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        <label style={labelStyle}>ITEM ICON</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                             {emojis.map(e => (
                                 <button key={e} onClick={() => setForm(f => ({ ...f, image: e }))}
-                                    style={{ fontSize: 22, padding: "6px 10px", borderRadius: 8, border: `2px solid ${form.image === e ? "#6366f1" : "#1f2937"}`, background: form.image === e ? "#6366f122" : "#111827", cursor: "pointer", transition: "all .15s" }}>{e}</button>
+                                    style={{ 
+                                        fontSize: 24, 
+                                        width: 50, 
+                                        height: 50, 
+                                        background: form.image === e ? "var(--s2)" : "var(--s0)", 
+                                        border: `1px solid ${form.image === e ? "var(--gold)" : "var(--border)"}`, 
+                                        cursor: "pointer", 
+                                        transition: "all .2s" 
+                                    }}>{e}</button>
                             ))}
                         </div>
                     </div>
+
+                    {/* Fields */}
                     <div>
-                        <label style={labelStyle}>Title *</label>
-                        <input style={inputStyle} value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Calculus Textbook" />
+                        <label style={labelStyle}>ASSET TITLE *</label>
+                        <input className="input-box" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. TEXTBOOK, CALCULATOR" />
                     </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                         <div>
-                            <label style={labelStyle}>Category</label>
-                            <select style={inputStyle} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                            <label style={labelStyle}>CATEGORY</label>
+                            <select className="input-box" style={{ width: "100%", padding: "11px 14px" }} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                                {CATEGORIES.map(c => <option key={c}>{c.toUpperCase()}</option>)}
                             </select>
                         </div>
                         <div>
-                            <label style={labelStyle}>Condition</label>
-                            <select style={inputStyle} value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}>
-                                {["Like New", "Excellent", "Good", "Fair"].map(c => <option key={c}>{c}</option>)}
+                            <label style={labelStyle}>CONDITION</label>
+                            <select className="input-box" style={{ width: "100%", padding: "11px 14px" }} value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}>
+                                {["Like New", "Excellent", "Good", "Fair"].map(c => <option key={c}>{c.toUpperCase()}</option>)}
                             </select>
                         </div>
                     </div>
+
                     <div>
-                        <label style={labelStyle}>Price (ALGO) *</label>
-                        <input style={inputStyle} type="number" step="0.01" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="0.00" />
-                        {aiSuggestionAlgo && <div style={{ marginTop: 6, color: "#93c5fd", fontSize: 12 }}>AI estimated price (ALGO): {aiSuggestionAlgo}</div>}
-                        {aiSuggestionInr && <div style={{ marginTop: 4, color: "#9ca3af", fontSize: 12 }}>INR reference: {aiSuggestionInr}{aiAlgoInrRate ? ` (1 ALGO ≈ ₹${aiAlgoInrRate})` : ""}</div>}
+                        <label style={labelStyle}>LISTING PRICE (ALGO) *</label>
+                        <input className="input-box" type="number" step="0.01" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="0.00" />
+                        
+                        {aiSuggestionAlgo && (
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 12, padding: 12, background: "rgba(212,175,55,0.05)", borderLeft: "2px solid var(--gold)" }}>
+                                <div style={{ color: "var(--gold)", fontSize: 10, fontFamily: "'Space Mono', monospace" }}>AI ESTIMATE: {aiSuggestionAlgo} ALGO</div>
+                                {aiSuggestionInr && <div style={{ color: "var(--text-dim)", fontSize: 10, fontFamily: "'Space Mono', monospace" }}>REFERENCE: {aiSuggestionInr}{aiAlgoInrRate ? ` (1 ALGO ≈ ₹${aiAlgoInrRate})` : ""}</div>}
+                            </div>
+                        )}
                     </div>
+
                     <div>
-                        <label style={labelStyle}>Description *</label>
-                        <textarea style={{ ...inputStyle, height: 80, resize: "vertical" }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Describe condition, edition, accessories..." />
+                        <label style={labelStyle}>DESCRIPTION *</label>
+                        <textarea className="input-box" style={{ height: 100, resize: "vertical" }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="SPECIFICATIONS, CONDITION DETAILS..." />
                     </div>
+
+                    {/* AI Judgement / Error */}
                     {aiPriceJudgement && (
-                        <div style={{ background: "#052e1633", border: "1px solid #34d39966", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "#6ee7b7" }}>
-                            Condition-based pricing judgement: {aiPriceJudgement}
+                        <div style={{ border: "1px solid var(--emerald)", padding: "12px 16px", fontSize: 10, color: "var(--emerald)", fontFamily: "'Space Mono', monospace", letterSpacing: "0.05em" }}>
+                            TERMINAL: {aiPriceJudgement}
                         </div>
                     )}
+                    
                     {aiError && (
-                        <div style={{ background: "#1e3a8a33", border: "1px solid #60a5fa66", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "#93c5fd" }}>
-                            {aiError || "AI could not analyze the image. You can continue manually."}
+                        <div style={{ border: "1px solid var(--gold-dim)", padding: "12px 16px", fontSize: 10, color: "var(--text-dim)", fontFamily: "'Space Mono', monospace" }}>
+                            {aiError}
                         </div>
                     )}
+
                     {error && (
-                        <div style={{ background: "#7f1d1d33", border: "1px solid #ef444466", borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "#fca5a5" }}>
+                        <div style={{ border: "1px solid var(--red)", padding: "12px 16px", fontSize: 10, color: "var(--red)", fontFamily: "'Space Mono', monospace" }}>
                             {error}
                         </div>
                     )}
-                    <div style={{ display: "flex", gap: 12 }}>
-                        <button onClick={onClose} disabled={submitting} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid #1f2937", background: "none", color: "#9ca3af", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
-                        <button onClick={handleSubmit} disabled={submitting} style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", background: submitting ? "#374151" : "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff", cursor: submitting ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 15 }}>
-                            {submitting ? "Listing..." : "List Item"}
+
+                    {/* Actions */}
+                    <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
+                        <button onClick={onClose} disabled={submitting} className="btn-text-gold" style={{ flex: 1, fontSize: 11 }}>CANCEL</button>
+                        <button onClick={handleSubmit} disabled={submitting} className="btn-gold" style={{ flex: 2, padding: "14px 0", fontSize: 11 }}>
+                            {submitting ? "SYNCING..." : "PUBLISH TO LEDGER →"}
                         </button>
                     </div>
                 </div>
