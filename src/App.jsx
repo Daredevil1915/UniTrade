@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import algosdk from "algosdk";
 import { PeraWalletConnect } from "@perawallet/connect";
 import { Toast, truncate, inputStyle } from "./components/Shared";
@@ -502,32 +503,52 @@ export default function App() {
   return (
     <>
       {/* ── TICKER TAPE ── */}
-      <div className="ticker-bar">
+      <motion.div
+        className="ticker-bar"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <div className="ticker-track">
           {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
             <div key={i} className={`ticker-item${item.gold ? " gold" : ""}`}>
-              {i === 0 || i === TICKER_ITEMS.length ? <span className="live-dot" /> : null}
+              {i === 0 || i === TICKER_ITEMS.length ? <span className="live-dot" style={{ backgroundColor: "var(--pulse)", width: 6, height: 6, borderRadius: "50%" }} /> : null}
               {item.text}
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* ── NAVBAR ── */}
-      <header className="navbar">
-        <div className="nav-logo" onClick={() => setTab("browse")}>
+      <motion.header
+        className="navbar"
+        initial={{ opacity: 0, y: -64 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
+      >
+        <motion.div
+          className="nav-logo"
+          onClick={() => setTab("browse")}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.97 }}
+          style={{ cursor: "pointer" }}
+        >
           ⬡ UNITRADE
-        </div>
+        </motion.div>
 
         <nav className="nav-links">
-          {["browse", "my-orders", "listed-offers", "wishlist"].map(t => (
-            <button
+          {["browse", "my-orders", "listed-offers", "wishlist"].map((t, i) => (
+            <motion.button
               key={t}
               className={`nav-link${tab === t ? " active" : ""}`}
               onClick={() => setTab(t)}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + i * 0.05, duration: 0.4 }}
+              whileTap={{ scale: 0.96 }}
             >
               {TAB_LABELS[t]}
-            </button>
+            </motion.button>
           ))}
         </nav>
 
@@ -597,42 +618,80 @@ export default function App() {
             </div>
           )}
         </div>
-      </header>
+      </motion.header>
 
       {/* ── MAIN ── */}
       <div className="content-wrapper">
 
         {/* ══ BROWSE TAB ══ */}
+        <AnimatePresence mode="wait">
         {tab === "browse" && (
-          <div className="main-layout">
+          <motion.div
+            className="main-layout"
+            key="browse"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
+          >
 
             {/* Hero */}
             <section className="hero-section">
-              <div className="hero-left">
-                <div className="hero-label">Campus P2P · Powered by Algorand</div>
-                <h1 className="hero-headline">
-                  The Campus<br />Marketplace.<br /><em>Reimagined.</em>
-                </h1>
-                <p className="hero-body">
-                  Buy and sell with classmates. Near-zero transaction fees,
-                  instant finality, and full on-chain transparency. The future
-                  of campus commerce is here.
-                </p>
+              <motion.div
+                className="hero-left"
+                initial={{ opacity: 0, x: -40 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, delay: 0.1, ease: [0.19, 1, 0.22, 1] }}
+              >
+                <motion.div
+                  className="hero-label"
+                  initial={{ opacity: 0, letterSpacing: "0.8em" }}
+                  animate={{ opacity: 1, letterSpacing: "0.45em" }}
+                  transition={{ duration: 1, delay: 0.3 }}
+                >Campus P2P · Powered by Algorand</motion.div>
+                <motion.h1
+                  className="serif"
+                  style={{ fontSize: "clamp(48px, 8vw, 80px)", lineHeight: 1, fontWeight: 700, margin: "24px 0" }}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  The Campus <br />
+                  <span style={{ color: "var(--pulse)", fontStyle: "italic" }}>Marketplace</span> <br />
+                  <span style={{ opacity: 0.9 }}>Reimagined.</span>
+                </motion.h1>
+                <motion.p 
+                  className="hero-body"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4, duration: 1 }}
+                >
+                  Experience the next generation of peer-to-peer trading. Fast, secure, and powered by high-performance blockchain technology.
+                </motion.p>
                 {/* Stats */}
-                <div className="hero-stats">
-                  <div className="stat-box">
-                    <span className="stat-num">{listings.length}</span>
-                    <span className="stat-lbl">Active Listings</span>
-                  </div>
-                  <div className="stat-box">
-                    <span className="stat-num">&lt;0.001</span>
-                    <span className="stat-lbl">ALGO Fee</span>
-                  </div>
-                  <div className="stat-box">
-                    <span className="stat-num">100%</span>
-                    <span className="stat-lbl">Carbon-Neutral</span>
-                  </div>
-                </div>
+                <motion.div
+                  className="hero-stats"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                >
+                  {[
+                    { num: listings.length, lbl: "Active Listings" },
+                    { num: "<0.001", lbl: "ALGO Fee" },
+                    { num: "100%", lbl: "Carbon-Neutral" }
+                  ].map((s, i) => (
+                    <motion.div
+                      key={s.lbl}
+                      className="stat-box"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 + i * 0.1, duration: 0.4 }}
+                    >
+                      <span className="stat-num">{s.num}</span>
+                      <span className="stat-lbl">{s.lbl}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
 
                 {!accountAddress && (
                   <div style={{ marginTop: 8 }}>
@@ -641,7 +700,7 @@ export default function App() {
                     </button>
                   </div>
                 )}
-              </div>
+              </motion.div>
 
               <div className="hero-right">
                 {featuredListing ? (
@@ -671,54 +730,70 @@ export default function App() {
             )}
 
             {/* Price Range */}
-            <div className="price-row" style={{ height: "auto", minHeight: 48, padding: "12px 48px" }}>
-              <span className="price-label">Price Range</span>
+            <div className="price-row" style={{ height: "auto", minHeight: 48, padding: "12px 48px", background: "rgba(15, 23, 42, 0.3)", borderRadius: "16px 16px 0 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+              <span className="price-label" style={{ color: "var(--text-muted)", fontSize: 11, fontWeight: 600 }}>Price Range</span>
               <input
                 type="range" min="0" max={absoluteMaxPrice} step="0.1"
                 value={priceRange[1]}
                 onChange={(e) => setPriceRange([priceRange[0], parseFloat(e.target.value)])}
+                style={{ accentColor: "var(--pulse)" }}
               />
-              <span className="price-val">0 – {priceRange[1]} ALGO</span>
+              <span className="price-val" style={{ color: "var(--pulse)", fontWeight: 700 }}>0 – {priceRange[1]} ALGO</span>
             </div>
 
             {/* Condition filter */}
-            <div className="cond-row" style={{ height: "auto", minHeight: 48, padding: "12px 48px" }}>
-              <span className="cond-label">Condition:</span>
-              <div style={{ display: "flex", gap: 16, overflowX: "auto", scrollbarWidth: "none" }}>
+            <div className="cond-row" style={{ height: "auto", minHeight: 48, padding: "12px 48px", background: "rgba(15, 23, 42, 0.3)", borderBottom: "1px solid rgba(255, 255, 255, 0.05)" }}>
+              <span className="cond-label" style={{ color: "var(--text-muted)", fontSize: 11, fontWeight: 600 }}>Condition:</span>
+              <div style={{ display: "flex", gap: 8, overflowX: "auto", scrollbarWidth: "none" }}>
                 {CONDITIONS.map(item => (
-                  <button
+                  <motion.button
                     key={item}
                     className={`cat-link${condFilter === item ? " active" : ""}`}
                     onClick={() => setCondFilter(item)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ 
+                        height: 36, padding: "0 16px", borderRadius: 18, 
+                        background: condFilter === item ? "var(--pulse)" : "rgba(255,255,255,0.05)",
+                        color: condFilter === item ? "#000" : "var(--text-muted)",
+                        fontSize: 11, fontWeight: 600, border: "none"
+                    }}
                   >
-                    {item}
-                  </button>
+                    {item.toUpperCase()}
+                  </motion.button>
                 ))}
               </div>
             </div>
 
             {/* Filter + Categories */}
-            <div className="filter-bar">
-              <div className="filter-search">
-                <span className="filter-search-icon">⌕</span>
+            <div className="filter-bar" style={{ background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(20px)", borderRadius: "0 0 16px 16px", padding: "12px 24px", minHeight: 64, display: "flex", alignItems: "center", gap: 16 }}>
+              <div className="filter-search" style={{ background: "rgba(0,0,0,0.2)", borderRadius: 12, border: "1px solid rgba(255,255,255,0.05)", padding: "0 16px", display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
+                <span className="filter-search-icon" style={{ fontSize: 18, color: "var(--pulse-dim)" }}>⌕</span>
                 <input
                   placeholder="Search listings…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  style={{ background: "none", border: "none", padding: "10px 0", color: "var(--text)", width: "100%", fontSize: 14 }}
                 />
               </div>
 
-              <div className="filter-divider" />
-
-              <div className="filter-cats">
+              <div className="filter-cats" style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
                 {CATEGORIES.map(item => (
-                  <button
+                  <motion.button
                     key={item}
                     className={`cat-link${category === item ? " active" : ""}`}
                     onClick={() => setCategory(item)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ 
+                        height: 36, padding: "0 16px", borderRadius: 18, 
+                        background: category === item ? "rgba(0, 242, 254, 0.15)" : "transparent",
+                        color: category === item ? "var(--pulse)" : "var(--text-muted)",
+                        fontSize: 12, fontWeight: 600, border: "none"
+                    }}
                   >
-                    {item}
-                  </button>
+                    {item.toUpperCase()}
+                  </motion.button>
                 ))}
               </div>
 
@@ -727,7 +802,7 @@ export default function App() {
                   className="select-obsidian"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  style={{ height: 38, minWidth: 120, fontSize: 10, letterSpacing: "0.12em" }}
+                  style={{ height: 38, minWidth: 120, fontSize: 11, background: "rgba(0,0,0,0.2)", borderRadius: 12, padding: "0 12px", color: "var(--text-muted)" }}
                 >
                   <option value="newest">NEWEST</option>
                   <option value="price-asc">PRICE ↑</option>
@@ -744,16 +819,27 @@ export default function App() {
                 <div className="loading-text">Syncing Marketplace…</div>
               </div>
             ) : filteredListings.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon" style={{ animation: "float 3s ease-in-out infinite" }}>◌</div>
-                <div className="empty-title">No Listings Found.</div>
-                <div className="empty-sub">Adjust your search or filters.</div>
-                <button className="btn-outline" onClick={() => { setSearch(""); setCategory("All"); setCondFilter("All"); }}>
-                  CLEAR FILTERS
+              <div className="empty-state" style={{ padding: 80, textAlign: "center", color: "var(--text-dim)" }}>
+                <div className="empty-icon" style={{ fontSize: 64, marginBottom: 16, animation: "float 4s ease-in-out infinite" }}>📡</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text)", marginBottom: 8 }}>SIGNAL LOST.</div>
+                <div style={{ fontSize: 13 }}>NO LISTINGS FOUND IN THIS SECTOR.</div>
+                <button 
+                    className="btn-gold" 
+                    onClick={() => { setSearch(""); setCategory("All"); setCondFilter("All"); }}
+                    style={{ marginTop: 24, padding: "12px 32px", fontSize: 11 }}
+                >
+                  RESET FILTERS
                 </button>
               </div>
             ) : (
-              <div className="card-grid">
+              <motion.div
+                className="card-grid"
+                variants={{ visible: { transition: { staggerChildren: 0.08 } } }}
+                layout
+                initial="hidden"
+                animate="visible"
+                style={{ padding: "48px 40px", gap: 32 }}
+              >
                 {filteredListings.map((listing) => (
                   <div key={listing.id} className="card-grid-item">
                     <ListingCard
@@ -768,14 +854,21 @@ export default function App() {
                     />
                   </div>
                 ))}
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* ══ MY ORDERS ══ */}
         {tab === "my-orders" && (
-          <div className="main-layout">
+          <motion.div
+            className="main-layout"
+            key="my-orders"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
+          >
             <div className="section-header">
               <div>
                 <h2 className="section-title">My Orders.</h2>
@@ -806,12 +899,19 @@ export default function App() {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* ══ LISTED OFFERS ══ */}
         {tab === "listed-offers" && (
-          <div className="main-layout">
+          <motion.div
+            className="main-layout"
+            key="listed-offers"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
+          >
             <div className="section-header" style={{ borderBottom: "none" }}>
               <div>
                 <h2 className="section-title">Seller Hub.</h2>
@@ -890,12 +990,19 @@ export default function App() {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* ══ WISHLIST ══ */}
         {tab === "wishlist" && (
-          <div className="main-layout">
+          <motion.div
+            className="main-layout"
+            key="wishlist"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
+          >
             <div className="section-header">
               <div>
                 <h2 className="section-title">Saved.</h2>
@@ -925,43 +1032,46 @@ export default function App() {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
 
       {/* ── MODALS ── */}
-      {checkoutItem && (
-        <CheckoutModal listing={checkoutItem} accountAddress={accountAddress} balance={balance}
-          onClose={() => setCheckoutItem(null)} onConfirm={handlePayment}
-        />
-      )}
-      {showSell && (
-        <SellModal accountAddress={accountAddress} onClose={() => setShowSell(false)} onList={handleListItem} />
-      )}
-      {showVerify && (
-        <VerifyModal
-          onClose={() => setShowVerify(false)}
-          onVerify={async (email) => { 
-            try {
-              await updateProfile({ verified: true, email });
-              showToast("STUDENT VERIFIED. YOU MAY NOW LIST ITEMS.", "success"); 
-            } catch (err) {
-              showToast("SYNC FAILED. TRY AGAIN.", "error");
-            }
-          }}
-        />
-      )}
-      {showMap && <MapModal onClose={() => setShowMap(false)} />}
-      {chatListing && (
-        <ChatDrawer listing={chatListing} currentUserId={userId}
-          onClose={() => setChatListing(null)} onBuy={setCheckoutItem}
-          onOfferAccepted={handleOfferAccepted} showToast={showToast}
-        />
-      )}
-      {receiptOrder && (
-        <ReceiptModal order={receiptOrder} onClose={() => setReceiptOrder(null)} />
-      )}
-      {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      <AnimatePresence>
+        {checkoutItem && (
+          <CheckoutModal listing={checkoutItem} accountAddress={accountAddress} balance={balance}
+            onClose={() => setCheckoutItem(null)} onConfirm={handlePayment}
+          />
+        )}
+        {showSell && (
+          <SellModal accountAddress={accountAddress} onClose={() => setShowSell(false)} onList={handleListItem} />
+        )}
+        {showVerify && (
+          <VerifyModal
+            onClose={() => setShowVerify(false)}
+            onVerify={async (email) => { 
+              try {
+                await updateProfile({ verified: true, email });
+                showToast("STUDENT VERIFIED. YOU MAY NOW LIST ITEMS.", "success"); 
+              } catch (err) {
+                showToast("SYNC FAILED. TRY AGAIN.", "error");
+              }
+            }}
+          />
+        )}
+        {showMap && <MapModal onClose={() => setShowMap(false)} />}
+        {chatListing && (
+          <ChatDrawer listing={chatListing} currentUserId={userId}
+            onClose={() => setChatListing(null)} onBuy={setCheckoutItem}
+            onOfferAccepted={handleOfferAccepted} showToast={showToast}
+          />
+        )}
+        {receiptOrder && (
+          <ReceiptModal order={receiptOrder} onClose={() => setReceiptOrder(null)} />
+        )}
+        {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      </AnimatePresence>
     </>
   );
 }

@@ -1,0 +1,227 @@
+/*
+  ╔═══════════════════════════════════════════════════════════════════╗
+  ║  THE NEBULA GLASSMORPHISM                                           ║
+  ║  UniTrade Design System v4.0 — "Oceanic HUD"                      ║
+  ║  Specification by StitchMCP AI                                    ║
+  ║  ─────────────────────────────────────────────────────────────    ║
+  ║  Concept: Glassmorphism × Depth × Framer Motion Optimized          ║
+  ║  ── SOFT EDGES. FROSTED SURFACES. ──                              ║
+  ╚═══════════════════════════════════════════════════════════════════╝
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:wght@400;700&display=swap');
+
+:root {
+  /* Dynamic Glass Palette */
+  --glass-bg:    rgba(15, 23, 42, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-glow:   rgba(0, 242, 254, 0.1);
+  --glass-surface: rgba(255, 255, 255, 0.03);
+  
+  /* Brand Colors (Glass-tailored) */
+  --pulse:           #00F2FE;
+  --pulse-dim:       #00dce6;
+  --nebula:          #7701d0;
+  --magenta:         #FF00C8;
+  --emerald:         #00FF94;
+  
+  /* Text System */
+  --text:            #f8fafc;
+  --text-muted:      #94a3b8;
+  --text-dim:        #64748b;
+
+  /* Typography */
+  --font-editorial: 'Playfair Display', serif;
+  --font-terminal:  'Space Mono', monospace;
+  --font-interface: 'Inter', system-ui, sans-serif;
+
+  /* Spacing & Radius */
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+}
+
+/* ── BASE STYLES ── */
+body {
+  background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0f172a 50%, #020617 100%) !important;
+  color: var(--text) !important;
+  font-family: var(--font-interface) !important;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── COMPONENTS ── */
+
+/* Glass Panel Utility */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.navbar {
+  height: 80px !important;
+  background: rgba(15, 23, 42, 0.6) !important;
+  backdrop-filter: blur(30px) saturate(200%) !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding: 0 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+}
+
+.nav-link {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--text-muted) !important;
+  padding: 8px 16px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1) !important;
+}
+
+.nav-link.active {
+  color: var(--pulse) !important;
+  background: var(--glass-surface) !important;
+}
+
+/* Enhanced Listing Cards */
+.listing-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease !important;
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+}
+
+.listing-card:hover {
+  border-color: rgba(0, 242, 254, 0.4) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 242, 254, 0.1) !important;
+}
+
+.card-thumb {
+  height: 240px !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  border-radius: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 80px !important;
+}
+
+.card-body {
+  padding: 24px !important;
+  flex: 1 !important;
+}
+
+.card-title {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: var(--text) !important;
+  margin-bottom: 8px !important;
+}
+
+.card-desc {
+  font-size: 14px !important;
+  color: var(--text-muted) !important;
+  line-height: 1.6 !important;
+  margin-bottom: 20px !important;
+}
+
+/* Kinetic Buttons */
+.btn-gold {
+  background: linear-gradient(135deg, var(--pulse) 0%, #0ea5e9 100%) !important;
+  color: #0c0a09 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  border-radius: var(--radius-md) !important;
+  padding: 12px 24px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1) !important;
+  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3) !important;
+}
+
+.btn-gold:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 242, 254, 0.4) !important;
+}
+
+.btn-outline {
+  background: var(--glass-surface) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text) !important;
+  font-weight: 500 !important;
+  border-radius: var(--radius-md) !important;
+  padding: 12px 24px !important;
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Modal Styling */
+.modal-backdrop {
+  background: rgba(2, 6, 23, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.modal-panel {
+  background: rgba(30, 41, 59, 0.7) !important;
+  backdrop-filter: blur(25px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Forms */
+.input-box {
+  background: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 14px !important;
+  color: var(--text) !important;
+  font-size: 14px !important;
+}
+
+.input-box:focus {
+  border-color: var(--pulse) !important;
+  box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.2) !important;
+}
+
+/* Layout overrides */
+.card-grid {
+  padding: 40px !important;
+  gap: 32px !important;
+  border: none !important;
+}
+
+.ticker-bar {
+  background: rgba(15, 23, 42, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  height: 36px !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.hero-stats {
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden !important;
+}
+
+/* Utility to bridge some old names */
+.btn-text-gold {
+  color: var(--pulse) !important;
+  font-weight: 600 !important;
+}

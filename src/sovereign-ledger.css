@@ -1,0 +1,257 @@
+/* sovereign-ledger.css */
+/* Implementation of the Ultra-Luxury Bloomberg-style Tiled Theme */
+/* Using design tokens from theme-palette.css as requested */
+
+:root {
+  /* Use the "Etheric" palette mapping */
+  --bg: #000000;              /* Pure Void as requested */
+  --s0: #111111;              /* Dark Slab */
+  --s1: #151515;
+  --s2: #1A1A1A;
+  --s3: #222222;
+  --s4: #2A2A2A;
+
+  /* Primary Accent: Use Cyan from theme-palette.css (replacing Gold as per specific request to use that palette) */
+  /* Note: User said "use the colour palette of theme-palette.css... instead of colour given above" */
+  --gold: #00F2FE;            /* Cyan from palette */
+  --gold-dim: #00BCC5;
+  --gold-bright: #33F5FF;
+  --gold-muted: #A18CD1;
+  --gold-glow: rgba(0, 242, 254, 0.15);
+
+  --text: #F8F9FA;
+  --text-muted: #ABA9BE;
+  --text-dim: #757487;
+
+  --border: rgba(255, 255, 255, 0.1);
+  --border-gold: rgba(0, 242, 254, 0.5); /* Cyan border */
+
+  /* Sovereign Layout Specifics */
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'Space Mono', monospace;
+  --roundness: 0 !important; /* ULTRA SHARP */
+}
+
+/* ================== Foundation ================== */
+body {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: var(--font-mono) !important;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+body::before, body::after { display: none !important; }
+
+/* ================== Layout & Nav ================== */
+.navbar {
+  background: rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border) !important;
+  height: 60px !important;
+  padding: 0 48px !important;
+}
+
+.nav-logo {
+  font-family: var(--font-mono) !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.2em !important;
+  color: var(--gold) !important;
+  text-transform: uppercase;
+}
+
+.nav-links { gap: 0 !important; }
+
+.nav-link {
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 24px !important;
+  height: 60px !important;
+  border-radius: 0 !important;
+}
+.nav-link:hover { color: var(--gold) !important; background: rgba(255,255,255,0.03) !important; }
+.nav-link.active { color: var(--gold) !important; }
+.nav-link::after { 
+  display: block !important; 
+  background: var(--gold) !important; 
+  height: 1px !important; 
+  bottom: 0px !important; 
+}
+
+/* Ticker bar */
+.ticker-bar {
+  background: #000 !important;
+  border-bottom: 1px solid var(--border) !important;
+  height: 32px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 9px !important;
+  letter-spacing: 0.15em !important;
+  color: var(--gold) !important;
+  text-transform: uppercase;
+}
+.ticker-item { border-right: 1px solid var(--border) !important; padding: 0 20px !important; }
+
+/* ================== Hero Section ================== */
+.hero-section {
+  display: flex !important;
+  padding: 80px 48px !important;
+  border-bottom: 1px solid var(--border) !important;
+  background: #000 !important;
+}
+.hero-left { flex: 1.5 !important; }
+.hero-headline {
+  font-family: var(--font-serif) !important;
+  font-size: 72px !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+  line-height: 1.05 !important;
+  color: var(--gold) !important;
+  margin: 20px 0 !important;
+}
+.hero-label { font-family: var(--font-mono); color: var(--text-dim); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
+.hero-body { font-family: var(--font-mono); font-size: 13px; color: var(--text-muted); line-height: 1.8; max-width: 500px; }
+
+/* Stats box styled as Bloomberg terminal boxes */
+.hero-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 0 !important;
+  margin-top: 40px !important;
+  border: 1px solid var(--border) !important;
+}
+.stat-box {
+  padding: 20px !important;
+  border-right: 1px solid var(--border) !important;
+  text-align: left !important;
+}
+.stat-num { font-family: var(--font-mono) !important; color: var(--gold) !important; font-size: 24px !important; display: block; }
+.stat-lbl { font-family: var(--font-mono) !important; color: var(--text-dim) !important; font-size: 9px !important; text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ================== Grid & Cards ================== */
+.card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+  gap: 0 !important; /* Seamless tiled layout */
+  border-top: 1px solid var(--border) !important;
+  border-left: 1px solid var(--border) !important;
+}
+
+.card-grid-item {
+  background: #000 !important;
+  border-radius: 0 !important;
+  border: 1px solid var(--border) !important;
+  border-top: none !important;
+  border-left: none !important;
+  transition: background 0.2s ease !important;
+  overflow: hidden;
+  position: relative;
+}
+/* Hover gold bar reveal */
+.card-grid-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 0;
+  background: var(--gold);
+  transition: width 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  z-index: 5;
+}
+.card-grid-item:hover { background: #080808 !important; }
+.card-grid-item:hover::before { width: 4px; }
+
+.card-thumb {
+  background: #000 !important;
+  border-bottom: 1px solid var(--border) !important;
+  height: 200px !important;
+  filter: grayscale(1) contrast(1.1);
+  transition: filter 0.3s ease;
+}
+.card-grid-item:hover .card-thumb { filter: grayscale(0) contrast(1); }
+
+/* Price styling in Mono */
+div[style*="font-size: 24px"][style*="font-weight: 800"] {
+  font-family: var(--font-mono) !important;
+  font-weight: 400 !important;
+  color: var(--gold) !important;
+  font-size: 20px !important;
+}
+
+/* ================== Controls & Buttons ================== */
+.btn-gold {
+  background: var(--gold) !important;
+  color: #000 !important;
+  border-radius: 0 !important;
+  font-family: var(--font-mono) !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  box-shadow: none !important;
+}
+.btn-gold:hover { background: var(--gold-bright) !important; }
+
+.btn-outline {
+  background: transparent !important;
+  color: var(--gold) !important;
+  border: 1px solid var(--gold) !important;
+  border-radius: 0 !important;
+  font-family: var(--font-mono) !important;
+}
+.btn-outline:hover { background: rgba(0, 242, 254, 0.05) !important; }
+
+.filter-bar {
+  background: #000 !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  padding: 0 48px !important;
+  position: sticky;
+  top: 60px;
+  z-index: 100;
+}
+.cat-link {
+  border-radius: 0 !important;
+  font-family: var(--font-mono) !important;
+  text-transform: uppercase;
+  font-size: 10px !important;
+  letter-spacing: 0.1em;
+  border-bottom: 2px solid transparent !important;
+  padding: 12px 16px !important;
+}
+.cat-link.active {
+  background: transparent !important;
+  color: var(--gold) !important;
+  border-bottom: 2px solid var(--gold) !important;
+}
+
+.input-box, .select-obsidian, textarea {
+  background: #050505 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  color: var(--text) !important;
+  font-family: var(--font-mono) !important;
+}
+
+/* Verification Chips */
+.co2-chip, .verified-chip, .wallet-address {
+  border-radius: 0 !important;
+  font-family: var(--font-mono) !important;
+  font-size: 9px !important;
+  border: 1px solid var(--border) !important;
+  background: #000 !important;
+}
+
+/* Modals */
+.modal-panel {
+  background: #000 !important;
+  border: 1px solid var(--border-gold) !important;
+  border-radius: 0 !important;
+  box-shadow: 20px 20px 0px 0px rgba(0,0,0,1), 20px 20px 1px 0px var(--border) !important;
+}
+
+/* Chat drawer as Bloomberg data panel */
+.chat-drawer-panel {
+  background: #050505 !important;
+  border-left: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+}

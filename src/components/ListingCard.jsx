@@ -1,82 +1,153 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { Badge, truncate, conditionColor } from "./Shared";
+
+const cardVariants = {
+    hidden: { opacity: 0, y: 24, scale: 0.97 },
+    visible: {
+        opacity: 1, y: 0, scale: 1,
+        transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
+    }
+};
+
+const thumbVariants = {
+    rest: { scale: 1, filter: "grayscale(80%)" },
+    hover: { scale: 1.04, filter: "grayscale(0%)", transition: { duration: 0.4, ease: "easeOut" } }
+};
+
+const barVariants = {
+    rest: { scaleX: 0 },
+    hover: { scaleX: 1, transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] } }
+};
+
+const buttonVariants = {
+    rest: { scale: 1 },
+    tap: { scale: 0.95 },
+    hover: { scale: 1.03, transition: { duration: 0.15 } }
+};
 
 export default function ListingCard({ listing, onBuy, accountAddress, currentUserId, wishlist, onToggleWishlist, onChat, onDelete }) {
     const isWished = wishlist?.includes(listing.id);
     const sellerAddress = listing.sellerAddress || listing.seller?.walletAddress || listing.seller;
-    const isOwner = Boolean(
-        accountAddress && sellerAddress && accountAddress === sellerAddress
-    );
+    const isOwner = Boolean(accountAddress && sellerAddress && accountAddress === sellerAddress);
 
     return (
-        <div className="listing-card" style={{ height: "100%" }}>
+        <motion.div
+            className="listing-card"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            whileHover="hover"
+            style={{ height: "100%", position: "relative" }}
+        >
+            {/* Sovereign Cyan Left Bar */}
+            <motion.div
+                variants={barVariants}
+                initial="rest"
+                style={{
+                    position: "absolute",
+                    left: 0, top: 0, bottom: 0, width: 5,
+                    background: "linear-gradient(to bottom, var(--pulse, #00F2FE), var(--pulse-dim, #00dce6))",
+                    boxShadow: "0 0 20px rgba(0,242,254,0.4)",
+                    transformOrigin: "left",
+                    zIndex: 10,
+                }}
+            />
+
             {/* Thumbnail */}
-            <div className="card-thumb">
+            <motion.div className="card-thumb" variants={thumbVariants}>
                 <span style={{ position: "relative", zIndex: 1 }}>{listing.image}</span>
-                <button
+                <motion.button
                     className={`wishlist-btn${isWished ? " active" : ""}`}
                     onClick={(e) => { e.stopPropagation(); onToggleWishlist?.(listing.id); }}
                     title={isWished ? "Remove from saved" : "Save listing"}
+                    whileTap={{ scale: 1.4 }}
+                    animate={isWished ? { scale: [1, 1.3, 1], transition: { duration: 0.3 } } : { scale: 1 }}
                 >
                     {isWished ? "♥" : "♡"}
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
 
             {/* Body */}
-            <div className="card-body">
-                <div className="card-category">{listing.category}</div>
+            <motion.div className="card-body">
+                <motion.div
+                    className="card-category"
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1, duration: 0.3 }}
+                >{listing.category}</motion.div>
                 <div className="card-title">{listing.title}</div>
                 <div className="card-desc">{listing.description}</div>
 
-                {/* Badges row */}
                 <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
                     <Badge text={listing.condition} color={conditionColor[listing.condition] || "#8A7420"} />
                     {listing.rating >= 4.0 && (
-                        <span className="badge badge-gold">⭐ TRUSTED</span>
+                        <motion.span
+                            className="badge badge-gold"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.2 }}
+                        >⭐ TRUSTED</motion.span>
                     )}
                     <span style={{ marginLeft: "auto", fontFamily: "'Space Mono', monospace", fontSize: 9, color: "var(--text-dim)", letterSpacing: "0.06em" }}>
                         {truncate(sellerAddress)}
                     </span>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Footer */}
             <div className="card-footer">
-                <div>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                >
                     <div className="card-price">
                         {listing.price}
                         <span style={{ fontSize: 12, fontWeight: 400, color: "var(--gold-muted)", marginLeft: 4 }}>ALGO</span>
                     </div>
                     <div className="card-fiat">≈ ₹{(listing.price * 15).toLocaleString("en-IN")} INR</div>
-                </div>
+                </motion.div>
 
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     {accountAddress && (
-                        <button
+                        <motion.button
                             className="btn-text-gold"
                             onClick={() => onChat?.(listing)}
                             title="Message seller"
                             style={{ fontSize: 11, letterSpacing: "0.1em" }}
+                            variants={buttonVariants}
+                            whileHover="hover"
+                            whileTap="tap"
                         >
                             CHAT →
-                        </button>
+                        </motion.button>
                     )}
                     {isOwner ? (
-                        <button className="btn-danger" onClick={() => onDelete?.(listing)}>
+                        <motion.button
+                            className="btn-danger"
+                            onClick={() => onDelete?.(listing)}
+                            variants={buttonVariants}
+                            whileHover="hover"
+                            whileTap="tap"
+                        >
                             DELETE
-                        </button>
+                        </motion.button>
                     ) : (
-                        <button
+                        <motion.button
                             className="btn-gold"
                             onClick={() => onBuy(listing)}
                             disabled={!accountAddress}
                             style={{ padding: "8px 18px", fontSize: 11 }}
+                            variants={buttonVariants}
+                            whileHover="hover"
+                            whileTap="tap"
                         >
                             {accountAddress ? "BUY" : "CONNECT"}
-                        </button>
+                        </motion.button>
                     )}
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

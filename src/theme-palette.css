@@ -1,0 +1,51 @@
+/* 
+  UniTrade "Etheric Glass" Color Palette Reference File
+  Extracted from: glassmorphism.css
+  Theme: Dark Glassmorphism with Neon Accents
+*/
+
+:root {
+  /* ================== Core Backgrounds & Layering ================== */
+  --color-bg-void-core: #0D0D1C;         /* Main Universe Void base */
+  --color-bg-layer-0: rgba(18, 18, 34, 0.4);  /* Primary Translucent surfaces */
+  --color-bg-layer-1: rgba(24, 24, 42, 0.5);  /* Subtle depth elevation */
+  --color-bg-layer-2: rgba(30, 30, 50, 0.6);  /* Mid-level stacking surfaces */
+  --color-bg-layer-3: rgba(36, 36, 58, 0.7);  /* Opaque-leaning overlay surfaces */
+  --color-bg-layer-4: rgba(42, 42, 66, 0.8);  /* Contrast surfaces for headers */
+
+  /* ================== Primary Accents (The "Neon" Pulse) ================== */
+  --color-cyan-primary: #00F2FE;        /* Core interactive color */
+  --color-cyan-dim: #00BCC5;           /* Low-key interactive states */
+  --color-cyan-bright: #33F5FF;        /* Active focus/glow states */
+  --color-magenta-accent: #FF00C8;     /* Warning/Critical/High-Energy */
+  --color-purple-muted: #A18CD1;       /* Soft tertiary accents and labels */
+
+  /* ================== Glow & Effects ================== */
+  --glow-cyan-sm: rgba(0, 242, 254, 0.15);  /* Hover pulse and small buttons */
+  --glow-cyan-lg: rgba(0, 242, 254, 0.08);  /* Large container glows */
+  
+  /* ================== Typography & Content ================== */
+  --color-text-high: #F8F9FA;          /* High readability white */
+  --color-text-body: #ABA9BE;          /* Standard UI text muted */
+  --color-text-dim: #757487;           /* Low-emphasis hint text */
+
+  /* ================== Status & Indicators ================== */
+  --color-emerald-success: #00FF94;    /* Positive status/Confirmed */
+  --color-amber-warning: #FF9E0B;      /* Pending actions/Price alerts */
+
+  /* ================== Ghost Borders & Lines ================== */
+  --color-border-ghost: rgba(255, 255, 255, 0.1);  /* Subtlest divider */
+  --color-border-soft: rgba(255, 255, 255, 0.15);  /* Visible boundary line */
+  --color-border-active: rgba(0, 242, 254, 0.3);   /* Interaction state border */
+
+  /* ================== Spacing & Effects ================== */
+  --ui-roundness-core: 16px;           /* Default card/button rounding */
+  --ui-blur-default: blur(16px);       /* Standard backdrop-filter strength */
+}
+
+/* 
+  Developer Notes:
+  - This system uses "Glass Elevation" rather than shadows.
+  - To elevate an element, stack a higher layer (--s1, --s2) over the background.
+  - All borders should be 1px wide using low-opacity 'ghost' values.
+*/

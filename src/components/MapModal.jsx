@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -21,8 +22,22 @@ const PICKUP_SPOTS = [
 
 export default function MapModal({ onClose }) {
     return (
-        <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-            <div className="modal-panel" style={{ maxWidth: 720, padding: 32, animation: "scaleIn .25s ease" }}>
+        <motion.div
+          className="modal-backdrop"
+          onClick={e => e.target === e.currentTarget && onClose()}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+            <motion.div
+              className="modal-panel"
+              style={{ maxWidth: 720, padding: 32 }}
+              initial={{ scale: 0.85, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 40 }}
+              transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            >
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
                     <div>
                         <h2 className="serif" style={{ color: "var(--text)", fontSize: 24, fontWeight: 800, margin: "0 0 8px" }}>CAMPUS NODES.</h2>
@@ -69,7 +84,7 @@ export default function MapModal({ onClose }) {
                 <div style={{ marginTop: 24, textAlign: "center" }}>
                     <button onClick={onClose} className="btn-gold" style={{ padding: "12px 32px", fontSize: 11 }}>CLOSE MAP VIEW</button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

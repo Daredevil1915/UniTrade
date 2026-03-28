@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { labelStyle, truncate } from "./Shared";
 
 const CAMPUS_LOCATIONS = [
@@ -16,8 +17,22 @@ export default function CheckoutModal({ listing, onClose, onConfirm, accountAddr
     const sellerAddress = listing.sellerAddress || listing.seller?.walletAddress || listing.seller;
     const fee = 0.001;
     return (
-        <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && !loading && onClose()}>
-            <div className="modal-panel" style={{ maxWidth: 440, padding: 40, animation: "scaleIn .25s ease" }}>
+        <motion.div
+          className="modal-backdrop"
+          onClick={e => e.target === e.currentTarget && !loading && onClose()}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+            <motion.div
+              className="modal-panel"
+              style={{ maxWidth: 440, padding: 40 }}
+              initial={{ scale: 0.85, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 40 }}
+              transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            >
                 <div style={{ fontSize: 64, textAlign: "center", marginBottom: 24, animation: "float 4s ease-in-out infinite" }}>{listing.image}</div>
                 <h2 className="serif" style={{ margin: "0 0 12px", color: "var(--text)", textAlign: "center", fontSize: "clamp(20px, 4vw, 24px)", fontWeight: 800 }}>{listing.title.toUpperCase()}</h2>
                 <p style={{ margin: "0 0 32px", color: "var(--text-muted)", textAlign: "center", fontSize: 13, lineHeight: 1.6 }}>{listing.description}</p>
@@ -110,7 +125,7 @@ export default function CheckoutModal({ listing, onClose, onConfirm, accountAddr
                     </div>
                     <button onClick={onClose} disabled={loading} className="btn-text-gold" style={{ fontSize: 11 }}>CANCEL TRANSACTION</button>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

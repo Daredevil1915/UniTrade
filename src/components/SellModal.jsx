@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { labelStyle } from "./Shared";
 import { requestListingSuggestion, toAiImagePayload } from "../services/listingAiService";
 
@@ -139,93 +140,116 @@ export default function SellModal({ onClose, onList, accountAddress }) {
     };
 
     return (
-        <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-            <div className="modal-panel" style={{ maxWidth: 520, padding: "40px 32px", maxHeight: "90vh", overflowY: "auto" }}>
+        <motion.div
+          className="modal-backdrop"
+          onClick={e => e.target === e.currentTarget && onClose()}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+            <motion.div
+              className="modal-panel"
+              style={{ maxWidth: 520, padding: "40px 32px", maxHeight: "90vh", overflowY: "auto" }}
+              initial={{ scale: 0.85, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 40 }}
+              transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            >
                 <h2 className="serif" style={{ margin: "0 0 32px", color: "var(--text)", fontSize: 24, fontWeight: 800 }}>📦 NEW LISTING.</h2>
                 <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                     
                     {/* Media Upload */}
-                    <div style={{ background: "var(--s0)", border: "1px solid var(--border)", padding: 24 }}>
-                        <label style={labelStyle}>AI IMAGE ANALYSIS</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageSelection}
-                            className="input-box"
-                            style={{ padding: 10, fontSize: 11, marginBottom: 16 }}
-                        />
-                        {imagePreviewUrl && (
-                            <img
-                                src={imagePreviewUrl}
-                                alt="Preview"
-                                style={{ width: "100%", height: 200, objectFit: "cover", border: "1px solid var(--border-mid)", marginBottom: 16 }}
+                    <div style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255, 255, 255, 0.1)", padding: 24, borderRadius: 16 }}>
+                        <label style={{ ...labelStyle, display: "block", marginBottom: 12 }}>AI IMAGE ANALYSIS</label>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelection}
+                                className="input-box"
+                                style={{ padding: "12px 14px", fontSize: 13 }}
                             />
-                        )}
-                        <button
-                            onClick={handleAnalyzeImage}
-                            disabled={!selectedImageFile || analyzingImage}
-                            className="btn-outline"
-                            style={{ width: "100%", padding: "12px", background: analyzingImage ? "var(--s1)" : "transparent", fontSize: 11 }}
-                        >
-                            {analyzingImage ? "ANALYZING..." : "GENERATE AI METADATA →"}
-                        </button>
+                            {imagePreviewUrl && (
+                                <img
+                                    src={imagePreviewUrl}
+                                    alt="Preview"
+                                    style={{ width: "100%", height: 180, objectFit: "cover", borderRadius: 12, border: "1px solid rgba(255, 255, 255, 0.1)" }}
+                                />
+                            )}
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleAnalyzeImage}
+                                disabled={!selectedImageFile || analyzingImage}
+                                className="btn-outline"
+                                style={{ width: "100%", padding: "14px", background: analyzingImage ? "rgba(255,255,255,0.05)" : "rgba(255,255,255,0.03)", fontSize: 12, fontWeight: 600 }}
+                            >
+                                {analyzingImage ? "ANALYZING..." : "GENERATE AI METADATA →"}
+                            </motion.button>
+                        </div>
                     </div>
 
                     {/* Icon Selection */}
                     <div>
-                        <label style={labelStyle}>ITEM ICON</label>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                        <label style={{ ...labelStyle, display: "block", marginBottom: 12 }}>ITEM ICON</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                             {emojis.map(e => (
-                                <button key={e} onClick={() => setForm(f => ({ ...f, image: e }))}
+                                <motion.button 
+                                    key={e} 
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() => setForm(f => ({ ...f, image: e }))}
                                     style={{ 
                                         fontSize: 24, 
-                                        width: 50, 
-                                        height: 50, 
-                                        background: form.image === e ? "var(--s2)" : "var(--s0)", 
-                                        border: `1px solid ${form.image === e ? "var(--gold)" : "var(--border)"}`, 
+                                        width: 48, 
+                                        height: 48, 
+                                        background: form.image === e ? "rgba(0, 242, 254, 0.15)" : "rgba(0,0,0,0.2)", 
+                                        border: `1px solid ${form.image === e ? "var(--pulse)" : "rgba(255,255,255,0.1)"}`, 
+                                        borderRadius: 12,
                                         cursor: "pointer", 
                                         transition: "all .2s" 
-                                    }}>{e}</button>
+                                    }}>{e}</motion.button>
                             ))}
                         </div>
                     </div>
 
                     {/* Fields */}
-                    <div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <label style={labelStyle}>ASSET TITLE *</label>
                         <input className="input-box" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. TEXTBOOK, CALCULATOR" />
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                        <div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             <label style={labelStyle}>CATEGORY</label>
-                            <select className="input-box" style={{ width: "100%", padding: "11px 14px" }} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
-                                {CATEGORIES.map(c => <option key={c}>{c.toUpperCase()}</option>)}
+                            <select className="input-box" style={{ width: "100%", padding: "14px" }} value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}>
+                                {CATEGORIES.map(c => <option key={c} style={{ background: "#1e293b" }}>{c.toUpperCase()}</option>)}
                             </select>
                         </div>
-                        <div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             <label style={labelStyle}>CONDITION</label>
-                            <select className="input-box" style={{ width: "100%", padding: "11px 14px" }} value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}>
-                                {["Like New", "Excellent", "Good", "Fair"].map(c => <option key={c}>{c.toUpperCase()}</option>)}
+                            <select className="input-box" style={{ width: "100%", padding: "14px" }} value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}>
+                                {["Like New", "Excellent", "Good", "Fair"].map(c => <option key={c} style={{ background: "#1e293b" }}>{c.toUpperCase()}</option>)}
                             </select>
                         </div>
                     </div>
 
-                    <div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <label style={labelStyle}>LISTING PRICE (ALGO) *</label>
                         <input className="input-box" type="number" step="0.01" min="0" value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} placeholder="0.00" />
                         
                         {aiSuggestionAlgo && (
-                            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 12, padding: 12, background: "rgba(212,175,55,0.05)", borderLeft: "2px solid var(--gold)" }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 12, padding: 12, background: "rgba(212,175,55,0.05)", borderLeft: "2px solid var(--gold)", borderRadius: 8 }}>
                                 <div style={{ color: "var(--gold)", fontSize: 10, fontFamily: "'Space Mono', monospace" }}>AI ESTIMATE: {aiSuggestionAlgo} ALGO</div>
                                 {aiSuggestionInr && <div style={{ color: "var(--text-dim)", fontSize: 10, fontFamily: "'Space Mono', monospace" }}>REFERENCE: {aiSuggestionInr}{aiAlgoInrRate ? ` (1 ALGO ≈ ₹${aiAlgoInrRate})` : ""}</div>}
                             </div>
                         )}
                     </div>
 
-                    <div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <label style={labelStyle}>DESCRIPTION *</label>
-                        <textarea className="input-box" style={{ height: 100, resize: "vertical" }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="SPECIFICATIONS, CONDITION DETAILS..." />
+                        <textarea className="input-box" style={{ height: 100, resize: "none" }} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="SPECIFICATIONS, CONDITION DETAILS..." />
                     </div>
 
                     {/* AI Judgement / Error */}
@@ -255,7 +279,7 @@ export default function SellModal({ onClose, onList, accountAddress }) {
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

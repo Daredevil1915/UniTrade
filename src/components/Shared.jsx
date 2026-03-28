@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // ── Toast ──
 export function Toast({ message, type, onClose }) {
@@ -7,11 +8,34 @@ export function Toast({ message, type, onClose }) {
     const cls = type === "success" ? "toast toast-success" : type === "error" ? "toast toast-error" : "toast toast-info";
     const icon = type === "success" ? "✓" : type === "error" ? "✗" : "—";
     return (
-        <div className={cls}>
-            <span style={{ flexShrink: 0 }}>{icon}</span>
-            <span style={{ lineHeight: 1.5 }}>{message}</span>
-            <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: 18, opacity: 0.6, padding: "0 2px", flexShrink: 0 }}>×</button>
-        </div>
+        <motion.div 
+          className={cls}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+          style={{
+            background: "rgba(15, 23, 42, 0.8)",
+            backdropFilter: "blur(12px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+            padding: "16px 24px",
+            borderRadius: "16px",
+            fontSize: "13px",
+            fontWeight: 500
+          }}
+        >
+            <span style={{ 
+                flexShrink: 0, 
+                width: 24, height: 24, 
+                borderRadius: "50%", 
+                background: type === "success" ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)",
+                color: type === "success" ? "#10b981" : "#ef4444",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "12px", fontWeight: "bold"
+            }}>{icon}</span>
+            <span style={{ lineHeight: 1.5, color: "var(--text)" }}>{message}</span>
+            <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--text-dim)", cursor: "pointer", fontSize: 20, padding: "0 4px", flexShrink: 0 }}>×</button>
+        </motion.div>
     );
 }
 
@@ -55,24 +79,25 @@ export const conditionColor = {
 // ── Shared Styles (modal forms) ──
 export const labelStyle = {
     display: "block",
-    color: "var(--text-dim)",
-    fontSize: 10,
-    fontWeight: 700,
+    color: "var(--text-muted)",
+    fontSize: 12,
+    fontWeight: 600,
     marginBottom: 8,
-    fontFamily: "'Space Mono', monospace",
-    letterSpacing: "0.12em",
+    fontFamily: "'Inter', sans-serif",
+    letterSpacing: "0.02em",
     textTransform: "uppercase",
 };
 
 export const inputStyle = {
     width: "100%",
-    background: "var(--s0)",
-    border: "1px solid var(--border)",
-    padding: "12px 14px",
+    background: "rgba(0, 0, 0, 0.2)",
+    border: "1px solid rgba(255, 255, 255, 0.1)",
+    borderRadius: "12px",
+    padding: "14px 16px",
     color: "var(--text)",
-    fontSize: 14,
+    fontSize: 15,
     outline: "none",
     boxSizing: "border-box",
     fontFamily: "'Inter', sans-serif",
-    transition: "border-color 0.2s",
+    transition: "all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1)",
 };

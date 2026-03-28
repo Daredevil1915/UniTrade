@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { truncate, labelStyle } from "./Shared";
 import {
   getOrCreateChat,
@@ -290,12 +291,23 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
   };
 
   return (
-    <div
+    <motion.div
       className="modal-backdrop"
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 1000, display: "flex", justifyContent: "flex-end", alignItems: "stretch" }}
+      style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", justifyContent: "flex-end", alignItems: "stretch" }}
       onClick={(event) => event.target === event.currentTarget && onClose()}
+      initial={{ backgroundColor: "rgba(0,0,0,0)" }}
+      animate={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+      exit={{ backgroundColor: "rgba(0,0,0,0)" }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="chat-drawer-panel" style={{ width: "100%", maxWidth: 460, borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", animation: "slideInRight .3s ease" }}>
+      <motion.div
+        className="chat-drawer-panel"
+        style={{ width: "100%", maxWidth: 460, display: "flex", flexDirection: "column" }}
+        initial={{ x: "100%", opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: "100%", opacity: 0 }}
+        transition={{ type: "spring", damping: 26, stiffness: 260 }}
+      >
         {/* Header */}
         <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16, background: "rgba(255,255,255,0.02)" }}>
           <span style={{ fontSize: 32 }}>{listing.image}</span>
@@ -426,7 +438,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
             ➤
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

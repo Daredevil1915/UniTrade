@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { inputStyle, labelStyle } from "./Shared";
 
 const VALID_DOMAINS = ["@iec.ac.in"];
@@ -33,8 +34,22 @@ export default function VerifyModal({ onClose, onVerify }) {
     };
 
     return (
-        <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-            <div className="modal-panel" style={{ maxWidth: 420, padding: 40, textAlign: "center" }}>
+        <motion.div
+          className="modal-backdrop"
+          onClick={e => e.target === e.currentTarget && onClose()}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+            <motion.div
+              className="modal-panel"
+              style={{ maxWidth: 420, padding: 40, textAlign: "center" }}
+              initial={{ scale: 0.85, opacity: 0, y: 40 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 40 }}
+              transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            >
                 {step === "done" ? (
                     <>
                         <div style={{ fontSize: 64, marginBottom: 24, animation: "float 2s ease infinite" }}>✅</div>
@@ -84,7 +99,7 @@ export default function VerifyModal({ onClose, onVerify }) {
                         <button onClick={onClose} className="btn-text-gold" style={{ marginTop: 24 }}>CANCEL</button>
                     </>
                 )}
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
