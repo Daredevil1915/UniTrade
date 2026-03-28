@@ -66,9 +66,13 @@ export default function OrderRow({ order, currentUserId, onRate, onVerifyOtp, on
                     To: {truncate(order.receiver)} · {new Date(order.date).toLocaleDateString()}
                     {order.pickupLocation && <div>Pickup: {order.pickupLocation}</div>}
                     {order.negotiatedPrice > 0 && <div>Negotiated: {order.negotiatedPrice} ALGO</div>}
-                    <div>Payment: {order.paymentStatus === "released" ? "Released" : "Held"}</div>
+                    <div>
+                        Payment: {order.paymentMethod === "cash"
+                            ? (order.paymentStatus === "released" ? "Cash Paid" : "Cash")
+                            : (order.paymentStatus === "released" ? "Released" : "Held")}
+                    </div>
                 </div>
-                {order.txId && (
+                {order.txId && order.txId !== "CASH" && (
                     <a href={`https://testnet.algoexplorer.io/tx/${order.txId}`} target="_blank" rel="noreferrer"
                         style={{ fontSize: 11, color: "#6366f1", fontFamily: "'DM Mono', monospace", textDecoration: "none" }}>
                         {truncate(order.txId)} ↗
@@ -123,7 +127,7 @@ export default function OrderRow({ order, currentUserId, onRate, onVerifyOtp, on
 
                         {order.otpVerified && (
                             <div style={{ marginTop: 8, fontSize: 11, color: "#34d399" }}>
-                                Seller verified OTP. Release payment to complete this order.
+                                Seller verified OTP. {order.paymentMethod === "cash" ? "Confirm cash handover to complete this order." : "Release payment to complete this order."}
                             </div>
                         )}
 
@@ -143,7 +147,7 @@ export default function OrderRow({ order, currentUserId, onRate, onVerifyOtp, on
                                         cursor: loading ? "not-allowed" : "pointer",
                                     }}
                                 >
-                                    Release Payment
+                                    {order.paymentMethod === "cash" ? "Confirm Cash Handover" : "Release Payment"}
                                 </button>
                             </div>
                         )}
@@ -196,7 +200,9 @@ export default function OrderRow({ order, currentUserId, onRate, onVerifyOtp, on
                 {isSeller && order.status === "ready_for_delivery" && order.otpVerified && order.paymentStatus === "held" && (
                     <div style={{ marginTop: 10, background: "#0f172a", border: "1px solid #334155", borderRadius: 10, padding: "10px 12px" }}>
                         <div style={{ fontSize: 11, color: "#34d399" }}>OTP verified successfully.</div>
-                        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>Waiting for buyer to release payment.</div>
+                        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4 }}>
+                            Waiting for buyer to {order.paymentMethod === "cash" ? "confirm cash handover" : "release payment"}.
+                        </div>
                     </div>
                 )}
 

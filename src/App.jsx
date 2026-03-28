@@ -224,9 +224,11 @@ export default function App() {
     }
   };
 
-  const handlePayment = async (pickupLocation) => {
+  const handlePayment = async (pickupLocation, paymentMethod = "algo") => {
     const listing = checkoutItem;
-    if (!listing || !userId || !accountAddress) return;
+    const normalizedPaymentMethod = paymentMethod === "cash" ? "cash" : "algo";
+    if (!listing || !userId) return;
+    if (normalizedPaymentMethod === "algo" && !accountAddress) return;
 
     const receiverAddress = listing.sellerAddress || listing.seller?.walletAddress || listing.seller;
     const sellerId = listing.ownerId || listing.seller?.userId || "";
@@ -238,6 +240,7 @@ export default function App() {
         await updateOrder(orderId, {
           status: orderStatus.PENDING,
           paymentStatus: paymentStatus.HELD,
+          paymentMethod: normalizedPaymentMethod,
           txId: null,
           amount: payablePrice,
           price: payablePrice,
@@ -252,7 +255,7 @@ export default function App() {
           offerMessageId: listing.offerMessageId || "",
           buyerId: userId,
           sellerId,
-          buyerAddress: accountAddress,
+          buyerAddress: accountAddress || "cash-buyer",
           sellerAddress: receiverAddress,
           title: listing.title,
           image: listing.image,
@@ -260,6 +263,7 @@ export default function App() {
           amount: payablePrice,
           negotiatedPrice: Number(listing.negotiatedPrice || 0),
           finalPrice: payablePrice,
+          paymentMethod: normalizedPaymentMethod,
           txId: null,
           status: orderStatus.PENDING,
           paymentStatus: paymentStatus.HELD,
@@ -273,11 +277,15 @@ export default function App() {
 
       setCheckoutItem(null);
       setTab("my-orders");
-      showToast("Order created. Payment is held until seller verifies OTP and you release it.", "success");
+      if (normalizedPaymentMethod === "cash") {
+        showToast("Cash order created. OTP verification is required before you confirm cash handover.", "success");
+      } else {
+        showToast("Order created. Payment is held until seller verifies OTP and you release it.", "success");
+      }
     } catch (error) {
       console.error("[UniTrade] Order placement error:", error);
       setCheckoutItem(null);
-      showToast(`Could not create held order: ${error.message || "Unknown error"}`, "error");
+      showToast(`Could not create order: ${error.message || "Unknown error"}`, "error");
     }
   };
 
@@ -315,13 +323,15 @@ export default function App() {
 
   const handleReleasePayment = async (orderId) => {
     await withOrderAction(orderId, async () => {
-      if (!accountAddress) {
-        throw new Error("Connect your wallet to release payment.");
-      }
-
       const verifiedOrder = orders.find((item) => item.id === orderId);
       if (!verifiedOrder) {
         throw new Error("Order not found in local state.");
+      }
+
+      const isCashOrder = verifiedOrder.paymentMethod === "cash";
+
+      if (!isCashOrder && !accountAddress) {
+        throw new Error("Connect your wallet to release payment.");
       }
 
       if (verifiedOrder.buyerId !== userId) {
@@ -336,30 +346,36 @@ export default function App() {
         throw new Error("Missing seller wallet address for this order.");
       }
 
-      const suggestedParams = await algodClient.getTransactionParams().do();
-      const amount = algosdk.algosToMicroalgos(Number(verifiedOrder.price || verifiedOrder.finalPrice || verifiedOrder.amount || 0));
-      const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-        sender: accountAddress,
-        receiver: verifiedOrder.sellerAddress,
-        amount,
-        suggestedParams,
-        note: new TextEncoder().encode(`UniTrade release: ${verifiedOrder.title}`),
-      });
+      let txid = "CASH";
+      if (!isCashOrder) {
+        const suggestedParams = await algodClient.getTransactionParams().do();
+        const amount = algosdk.algosToMicroalgos(Number(verifiedOrder.price || verifiedOrder.finalPrice || verifiedOrder.amount || 0));
+        const txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+          sender: accountAddress,
+          receiver: verifiedOrder.sellerAddress,
+          amount,
+          suggestedParams,
+          note: new TextEncoder().encode(`UniTrade release: ${verifiedOrder.title}`),
+        });
 
-      const signedTxn = await peraWallet.signTransaction([[{ txn, signers: [accountAddress] }]]);
-      const sendResponse = await algodClient.sendRawTransaction(signedTxn).do();
-      const txid = sendResponse.txid || sendResponse.txId || sendResponse["txId"];
+        const signedTxn = await peraWallet.signTransaction([[{ txn, signers: [accountAddress] }]]);
+        const sendResponse = await algodClient.sendRawTransaction(signedTxn).do();
+        txid = sendResponse.txid || sendResponse.txId || sendResponse["txId"];
 
-      await algosdk.waitForConfirmation(algodClient, txid, 10);
+        await algosdk.waitForConfirmation(algodClient, txid, 10);
+      }
+
       await releaseOrderPayment(orderId, userId, txid);
 
       if (verifiedOrder.listingId && verifiedOrder.buyerId) {
         await setListingSold(verifiedOrder.listingId, verifiedOrder.buyerId);
       }
 
-      fetchBalance(accountAddress);
+      if (!isCashOrder) {
+        fetchBalance(accountAddress);
+      }
       setGreenTrades((prev) => prev + 1);
-      showToast("Payment released to seller after OTP verification.", "success");
+      showToast(isCashOrder ? "Cash handover confirmed after OTP verification." : "Payment released to seller after OTP verification.", "success");
     });
   };
 

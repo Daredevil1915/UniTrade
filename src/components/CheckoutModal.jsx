@@ -69,19 +69,29 @@ export default function CheckoutModal({ listing, onClose, onConfirm, accountAddr
                 </div>
 
                 <div style={{ background: "#1e293b66", border: "1px solid #334155", borderRadius: 8, padding: "8px 10px", marginBottom: 16, fontSize: 11, color: "#cbd5e1" }}>
-                    This creates a held order and OTP. Seller verifies OTP at meetup, then buyer releases payment.
+                    This creates a held order with OTP verification. After seller verifies OTP at meetup, buyer confirms release (ALGO or Cash handover).
                 </div>
 
                 <div style={{ display: "flex", gap: 12 }}>
                     <button onClick={onClose} disabled={loading} style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid #1f2937", background: "none", color: "#9ca3af", cursor: "pointer", fontWeight: 600 }}>Cancel</button>
-                    <button onClick={async () => { setLoading(true); await onConfirm(pickupLocation); setLoading(false); }}
+                    <button
+                        onClick={async () => {
+                            setLoading(true);
+                            await onConfirm(pickupLocation, "cash");
+                            setLoading(false);
+                        }}
+                        disabled={loading}
+                        style={{ flex: 1, padding: "12px 0", borderRadius: 10, border: "1px solid #14532d", background: loading ? "#374151" : "#14532d", color: "#dcfce7", cursor: loading ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 15, transition: "background .2s" }}>
+                        {loading ? "Creating..." : "Cash"}
+                    </button>
+                    <button onClick={async () => { setLoading(true); await onConfirm(pickupLocation, "algo"); setLoading(false); }}
                         disabled={loading}
                         style={{ flex: 2, padding: "12px 0", borderRadius: 10, border: "none", background: loading ? "#374151" : "linear-gradient(135deg,#6366f1,#8b5cf6)", color: "#fff", cursor: loading ? "not-allowed" : "pointer", fontWeight: 700, fontSize: 15, transition: "background .2s" }}>
                         {loading ? (
                             <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                                 <span style={{ animation: "pulse 1s infinite" }}>⬡</span> Creating...
                             </span>
-                        ) : "Create Held Order"}
+                        ) : "Pay With ALGO"}
                     </button>
                 </div>
             </div>
