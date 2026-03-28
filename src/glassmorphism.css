@@ -1,0 +1,514 @@
+/* glassmorphism.css */
+/* Overrides for UniTrade to invoke the "Etheric Glass" Dashboard & Auth System */
+
+:root {
+  /* Deep Gradient Universe Void */
+  --bg: #0d0d1c;
+  --s0: rgba(18, 18, 34, 0.4);
+  --s1: rgba(24, 24, 42, 0.5);
+  --s2: rgba(30, 30, 50, 0.6);
+  --s3: rgba(36, 36, 58, 0.7);
+  --s4: rgba(42, 42, 66, 0.8);
+
+  /* Primary Extragalactic Gases */
+  --gold: #00F2FE;          /* Swapped to Cyan */
+  --gold-dim: #00BCC5;
+  --gold-bright: #33F5FF;
+  --gold-muted: #A18CD1;    /* Soft Purple */
+  --gold-glow: rgba(0, 242, 254, 0.15);
+  --gold-glow-lg: rgba(0, 242, 254, 0.08);
+
+  /* High contrast readable text */
+  --text: #F8F9FA;
+  --text-muted: #aba9be;
+  --text-dim: #757487;
+
+  /* Neon accents */
+  --emerald: #00FF94;
+  --amber: #FF9E0B;
+  --red: #FF00C8; /* Magenta fallback for errors/accents */
+
+  /* Ghost borders */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-mid: rgba(255, 255, 255, 0.15);
+  --border-gold: rgba(0, 242, 254, 0.3);
+
+  --roundness: 16px;
+  --blur: blur(16px);
+}
+
+/* ================== Foundation ================== */
+body {
+  color-scheme: dark; /* Forces dark mode OS elements like scrollbars and default dropdowns */
+  background: linear-gradient(135deg, #090914 0%, #151030 50%, #0d0d1c 100%) !important;
+  background-attachment: fixed !important;
+  color: var(--text) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -20vh;
+  left: -20vw;
+  width: 70vw;
+  height: 70vh;
+  background: radial-gradient(circle, rgba(161, 140, 209, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -20vh;
+  right: -20vw;
+  width: 60vw;
+  height: 60vh;
+  background: radial-gradient(circle, rgba(0, 242, 254, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Base override to kill brutalist solid borders */
+* {
+  border-width: 1px !important;
+  box-shadow: none !important;
+  border-radius: var(--roundness) !important;
+}
+
+/* ================== Layout & Nav ================== */
+.navbar {
+  background: rgba(13, 13, 28, 0.6) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  height: 72px !important;
+}
+
+.nav-links { gap: 8px !important; }
+
+.nav-link {
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  height: auto !important;
+  transition: all 0.2s ease !important;
+}
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: var(--text) !important;
+}
+.nav-link.active {
+  background: rgba(0, 242, 254, 0.1) !important;
+  color: var(--gold) !important;
+}
+.nav-link::after { display: none !important; }
+
+.nav-logo {
+  color: var(--text) !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  letter-spacing: 0.2em !important;
+}
+
+.ticker-bar {
+  background: rgba(0, 242, 254, 0.1) !important;
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+}
+.ticker-item {
+  color: var(--text-muted) !important;
+  border-right: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+  font-family: 'Space Grotesk', monospace !important;
+}
+.ticker-item.gold {
+  color: var(--gold) !important;
+}
+.ticker-item .live-dot {
+  background: var(--gold) !important;
+  box-shadow: 0 0 8px var(--gold) !important;
+  border-radius: 50% !important;
+}
+
+/* ================== Components ================== */
+
+/* Glass Cards */
+.card-grid-item {
+  background: var(--s0) !important;
+  backdrop-filter: var(--blur) !important;
+  -webkit-backdrop-filter: var(--blur) !important;
+  border: 1px solid var(--border) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: var(--roundness) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+.card-grid-item:hover {
+  transform: translateY(-4px) !important;
+  background: var(--s1) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 242, 254, 0.05) !important;
+}
+.card-thumb {
+  border-bottom: 1px solid var(--border) !important;
+  border-radius: var(--roundness) var(--roundness) 0 0 !important;
+}
+
+/* Modals (Authentication vibe) */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  border-radius: 0 !important;
+}
+.modal-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
+  color: var(--text) !important;
+}
+
+/* Buttons */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, rgba(0, 150, 254, 1) 100%) !important;
+  color: #000 !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+  text-shadow: none !important;
+  box-shadow: 0 4px 12px rgba(0, 242, 254, 0.3) !important;
+}
+.btn-gold:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(0, 242, 254, 0.5) !important;
+  background: linear-gradient(135deg, #33F5FF 0%, var(--gold) 100%) !important;
+}
+.btn-gold:active {
+  transform: translateY(1px) !important;
+  box-shadow: 0 2px 8px rgba(0, 242, 254, 0.2) !important;
+}
+
+.btn-outline {
+  background: rgba(255, 255, 255, 0.03) !important;
+  color: var(--gold) !important;
+  border: 1px solid rgba(0, 242, 254, 0.4) !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  backdrop-filter: blur(10px) !important;
+  text-shadow: none !important;
+  transition: all 0.2s !important;
+}
+.btn-outline:hover {
+  background: rgba(0, 242, 254, 0.08) !important;
+  border-color: var(--gold) !important;
+  box-shadow: 0 4px 16px rgba(0, 242, 254, 0.15) !important;
+  transform: translateY(-2px) !important;
+}
+.btn-outline:active {
+  transform: translateY(1px) !important;
+}
+
+/* Inputs */
+.input-box, .select-obsidian, textarea {
+  background: rgba(0, 0, 0, 0.2) !important;
+  color: var(--text) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  transition: all 0.2s !important;
+}
+.input-box:focus, .select-obsidian:focus, textarea:focus {
+  background: rgba(0, 0, 0, 0.4) !important;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 4px rgba(0, 242, 254, 0.1) !important;
+  outline: none !important;
+}
+
+.select-obsidian option {
+  background-color: #0d0d1c !important; /* OS defaults to white without color-scheme, now strictly dark */
+  color: #00F2FE !important;
+  font-weight: 600 !important;
+}
+
+/* Tags and Chips */
+.co2-chip, .verified-chip, .wallet-address, .wallet-balance {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  color: var(--text) !important;
+  font-weight: 500 !important;
+  padding: 6px 14px !important;
+}
+.verified-chip {
+  color: var(--gold) !important;
+  border-color: rgba(0, 242, 254, 0.3) !important;
+  background: rgba(0, 242, 254, 0.05) !important;
+}
+
+.empty-state {
+  background: rgba(255,255,255,0.02) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px dashed rgba(255,255,255,0.15) !important;
+  border-radius: 24px !important;
+  color: var(--text-muted) !important;
+}
+
+/* Typography & Titles */
+.section-title {
+  color: var(--text) !important;
+  text-shadow: none !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+.section-sub {
+  color: var(--text-dim) !important;
+  font-weight: 400 !important;
+}
+h2, h3, .serif, .btn-text-gold {
+  color: var(--text) !important;
+  text-shadow: none !important;
+}
+.btn-text-gold {
+  color: var(--gold) !important;
+  text-decoration: none !important;
+}
+.btn-text-gold:hover {
+  text-decoration: underline !important;
+}
+
+/* Order Rows inline cleanup */
+div[style*="background: var(--bg)"] { background: transparent !important; }
+div[style*="background: var(--s0)"], 
+div[style*="background: var(--s2)"] {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--roundness) !important;
+}
+div[style*="rgba(0,255,148,0.05)"] {
+  background: rgba(0, 255, 148, 0.05) !important;
+  border: 1px solid rgba(0, 255, 148, 0.2) !important;
+  border-radius: var(--roundness) !important;
+}
+
+/* Chat drawer overrides */
+.chat-drawer-panel {
+  background: rgba(13, 13, 28, 0.7) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: none !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 0 !important;
+}
+
+/* Text specific color fixes */
+div[style*="color: var(--text-dim)"], div[style*="color: var(--text-muted)"] {
+  color: var(--text-muted) !important;
+}
+div[style*="color: var(--text)"] {
+  color: var(--text) !important;
+}
+div[style*="color: var(--gold)"] {
+  color: var(--gold) !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+}
+div[style*="color: var(--emerald)"] {
+  color: #00FF94 !important;
+}
+div[style*="color: var(--red)"] {
+  color: #FF00C8 !important;
+}
+
+/* Search bar and Filters */
+.filter-bar {
+  background: rgba(255,255,255,0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 16px !important;
+}
+.cat-link {
+  color: var(--text-muted) !important;
+  font-weight: 500 !important;
+  border-radius: 10px !important;
+}
+.cat-link.active {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+.cat-link::after { display: none !important; }
+.cat-link:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ================== Map & Leaflet Theming ================== */
+.leaflet-container {
+  background: var(--bg) !important;
+  font-family: inherit !important;
+}
+
+/* Invert map base tiles to dark mode, leave UI layers alone */
+.leaflet-tile-pane {
+  filter: grayscale(1) invert(0.9) contrast(1.2) hue-rotate(180deg) !important;
+}
+
+/* Glassmorphism popup wrapper */
+.leaflet-popup-content-wrapper {
+  background: rgba(13, 13, 28, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(0, 242, 254, 0.5) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 24px rgba(0, 242, 254, 0.2) !important;
+  color: var(--text) !important;
+  padding: 0 !important;
+}
+
+/* The little triangle pointer at the bottom of the popup */
+.leaflet-popup-tip {
+  background: rgba(13, 13, 28, 0.9) !important;
+  box-shadow: none !important;
+}
+
+/* Custom close button styling */
+.leaflet-popup-close-button {
+  color: var(--text-dim) !important;
+  text-shadow: none !important;
+  font-size: 16px !important;
+  padding: 4px !important;
+}
+
+/* Neon Marker dots */
+.gold-dot-marker {
+  background: #0d0d1c !important;
+  border: 2px solid var(--gold) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.5) !important;
+}
+
+/* ================== Mobile Responsiveness (Phones & Small Tablets) ================== */
+@media (max-width: 768px) {
+  /* Restack the main container */
+  .container {
+    padding: 0 16px !important;
+  }
+  
+  /* Restack and center the navigation */
+  .navbar {
+    height: auto !important;
+    padding: 16px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+  .nav-logo {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+  .nav-links {
+    margin-left: 0 !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    width: 100%;
+  }
+  .nav-link {
+    font-size: 10px !important;
+    padding: 8px 12px !important;
+  }
+
+  /* Force headers and toolbars to wrap down */
+  div[style*="justifyContent: space-between"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  div[style*="display: flex"][style*="gap"][style*="alignItems"] {
+    flex-wrap: wrap !important;
+  }
+  
+  /* Make all grid items single column */
+  .card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* Make filter options stack */
+  .filter-bar {
+    flex-wrap: wrap !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+  }
+  .filter-bar > div, .filter-bar > input, .filter-search-box {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Re-size giant typography */
+  .section-title {
+    font-size: 2.2rem !important;
+    line-height: 1.1 !important;
+  }
+  
+  /* Shrink modal sizes to fit screen */
+  .modal-panel {
+    width: 95vw !important;
+    max-width: none !important;
+    margin: 10vh auto !important;
+    border-radius: 20px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Transform the Side Chat Drawer into a Bottom Action Sheet */
+  .modal-backdrop[style*="justifyContent: flex-end"] {
+    justify-content: center !important;
+    align-items: flex-end !important; /* Forces drawer to snap to the bottom of the phone */
+  }
+  .chat-drawer-panel {
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 24px 24px 0 0 !important;
+    border-left: none !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+    margin-top: auto !important;
+    height: 85vh !important;
+  }
+
+  /* Ensure long words in chat or descriptions break cleanly */
+  * {
+    word-break: break-word !important;
+  }
+
+  /* Small chip resizing */
+  .wallet-balance, .wallet-address {
+    font-size: 10px !important;
+    padding: 6px 10px !important;
+  }
+
+  /* Let some buttons run full width if they sit alone */
+  .btn-gold, .btn-outline {
+    text-align: center !important;
+  }
+}
+
+/* Printing logic */
+@media print {
+  body::before, body::after { display: none !important; }
+  .receipt-print-area {
+    background: white !important;
+    color: black !important;
+    border-radius: 0 !important;
+  }
+}

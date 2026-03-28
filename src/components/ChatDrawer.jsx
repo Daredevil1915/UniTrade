@@ -291,12 +291,13 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 1000, display: "flex", justifyContent: "flex-end" }}
+      className="modal-backdrop"
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.6)", zIndex: 1000, display: "flex", justifyContent: "flex-end", alignItems: "stretch" }}
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div style={{ width: "100%", maxWidth: 460, background: "var(--bg)", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", animation: "slideInRight .3s ease" }}>
+      <div className="chat-drawer-panel" style={{ width: "100%", maxWidth: 460, borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", animation: "slideInRight .3s ease" }}>
         {/* Header */}
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16, background: "var(--s0)" }}>
+        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16, background: "rgba(255,255,255,0.02)" }}>
           <span style={{ fontSize: 32 }}>{listing.image}</span>
           <div style={{ flex: 1 }}>
             <div className="serif" style={{ fontWeight: 800, color: "var(--text)", fontSize: 18 }}>UNITRADE INBOX.</div>
@@ -309,7 +310,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
 
         {/* Seller tabs if multiple chats */}
         {isSeller && (
-          <div style={{ borderBottom: "1px solid var(--border)", padding: "12px 16px", display: "flex", gap: 12, overflowX: "auto", background: "var(--bg)" }}>
+          <div style={{ borderBottom: "1px solid var(--border)", padding: "12px 16px", display: "flex", gap: 12, overflowX: "auto", background: "rgba(255,255,255,0.03)" }}>
             {sellerChats.length === 0 ? (
               <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "'Space Mono', monospace" }}>NO BUYER CHATS YET.</div>
             ) : uniqueSellerChats.map((chat) => (
@@ -331,7 +332,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         )}
 
         {/* Listing preview slab */}
-        <div style={{ margin: "16px 20px 0", padding: "16px", background: "var(--s0)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ margin: "16px 20px 0", padding: "16px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 16, borderRadius: "16px" }}>
           <div style={{ fontSize: 34, background: "var(--s2)", padding: "10px 14px" }}>{listing.image}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text)", marginBottom: 4 }}>{listing.title}</div>
@@ -368,7 +369,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         )}
 
         {showOfferComposer && canSendOffer && (
-          <div style={{ margin: "12px 20px 0", padding: "16px", background: "var(--s0)", border: "1px solid var(--gold-dim)", display: "flex", gap: 12, alignItems: "center" }}>
+          <div style={{ margin: "12px 20px 0", padding: "16px", background: "rgba(255,255,255,0.04)", border: "1px solid var(--gold-dim)", display: "flex", gap: 12, alignItems: "center", borderRadius: "16px" }}>
             <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "'Space Mono', monospace" }}>OFFER ALGO</span>
             <input
               type="number"
@@ -406,7 +407,7 @@ export default function ChatDrawer({ listing, currentUserId, onClose, onBuy, onO
         </div>
 
         {/* Input area */}
-        <div style={{ padding: "20px 24px", borderTop: "1px solid var(--border)", display: "flex", gap: 12, background: "var(--s0)" }}>
+        <div style={{ padding: "20px 24px", borderTop: "1px solid var(--border)", display: "flex", gap: 12, background: "rgba(13, 13, 28, 0.7)" }}>
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}

@@ -34,7 +34,7 @@ export default function MapModal({ onClose }) {
                 </div>
 
                 <div style={{ border: "1px solid var(--border)", overflow: "hidden", height: 400, background: "var(--s0)" }}>
-                    <MapContainer center={[28.6758, 77.4479]} zoom={17} style={{ height: "100%", width: "100%", filter: "grayscale(1) invert(0.9) contrast(1.2)" }} scrollWheelZoom={true}>
+                    <MapContainer center={[28.6758, 77.4479]} zoom={17} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

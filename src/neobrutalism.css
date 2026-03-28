@@ -1,0 +1,337 @@
+/* neobrutalism.css */
+/* Overrides for UniTrade to invoke true Neobrutalism with popping colors */
+
+:root {
+  --bg: #F0F4C3;          /* Bright acid pastel background */
+  --s0: #FFFFFF;
+  --s1: #E0E0E0;
+  --s2: #CCCCCC;
+  --s3: #9E9E9E;
+  --s4: #757575;
+
+  /* Popping Magenta/Pink */
+  --gold: #FF0055;
+  --gold-dim: #D80048;
+  --gold-bright: #FF3377;
+  --gold-muted: #FF6699;
+  --gold-glow: rgba(255, 0, 85, 0.2);
+  --gold-glow-lg: rgba(255, 0, 85, 0.1);
+
+  /* High contrast text */
+  --text: #050505;
+  --text-muted: #333333;
+  --text-dim: #444444;
+
+  /* Neon accents */
+  --emerald: #00FF00;
+  --amber: #FFEA00;
+  --red: #FF3D00;
+
+  /* Strong dense borders */
+  --border: #000000;
+  --border-mid: #000000;
+  --border-gold: #000000;
+}
+
+body {
+  background: var(--bg) !important;
+  background-image: radial-gradient(var(--text-dim) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+  color: var(--text) !important;
+}
+
+body::before {
+  display: none !important; /* Kill the dark radial glow */
+}
+
+/* ================== Layout & Nav ================== */
+.navbar {
+  background: #B388FF !important; /* Popping purple navbar */
+  border-bottom: 4px solid #000 !important;
+  box-shadow: 0px 6px 0px 0px #000 !important;
+}
+
+.nav-logo {
+  color: #000 !important;
+  font-size: 20px !important;
+  text-shadow: 3px 3px 0px var(--amber) !important;
+}
+
+.nav-links {
+  gap: 16px !important;
+}
+
+.nav-link {
+  color: #000 !important;
+  font-weight: 800 !important;
+  background: #FFF !important;
+  border: 3px solid #000 !important;
+  height: 40px !important;
+  border-radius: 0 !important;
+  box-shadow: 4px 4px 0px 0px #000 !important;
+  padding: 0 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  transform: translate(0,0) !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+.nav-link:hover {
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 6px 6px 0px 0px #000 !important;
+  background: var(--amber) !important;
+}
+.nav-link.active {
+  background: var(--emerald) !important;
+}
+.nav-link::after {
+  display: none !important;
+}
+
+.ticker-bar {
+  background: var(--emerald) !important;
+  border-bottom: 3px solid #000 !important;
+  color: #000 !important;
+  font-weight: bold;
+}
+.ticker-item {
+  color: #000 !important;
+  border-right: 3px solid #000 !important;
+}
+.ticker-item.gold {
+  color: #000 !important;
+}
+
+/* ================== Components ================== */
+
+/* Global hard borders logic */
+* {
+  border-color: #000 !important;
+}
+
+.btn-gold {
+  background: var(--gold) !important;
+  color: #FFF !important;
+  border: 3px solid #000 !important;
+  box-shadow: 6px 6px 0px 0px #000 !important;
+  border-radius: 0 !important;
+  transform: translate(0, 0) !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+  text-shadow: 1px 1px 0px #000 !important;
+}
+.btn-gold:hover {
+  transform: translate(-3px, -3px) !important;
+  box-shadow: 9px 9px 0px 0px #000 !important;
+  background: var(--gold-bright) !important;
+}
+.btn-gold:active {
+  transform: translate(4px, 4px) !important;
+  box-shadow: 2px 2px 0px 0px #000 !important;
+}
+
+.btn-outline {
+  background: #18FFFF !important; /* bright cyan */
+  color: #000 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 6px 6px 0px 0px #000 !important;
+  border-radius: 0 !important;
+  font-weight: 800 !important;
+  transition: transform 0.1s, box-shadow 0.1s, background 0.1s !important;
+  text-shadow: none !important;
+}
+.btn-outline:hover {
+  background: var(--amber) !important;
+  transform: translate(-3px, -3px) !important;
+  box-shadow: 9px 9px 0px 0px #000 !important;
+}
+.btn-outline:active {
+  transform: translate(4px, 4px) !important;
+  box-shadow: 2px 2px 0px 0px #000 !important;
+}
+
+.input-box, .select-obsidian, textarea {
+  background: #FFF !important;
+  color: #000 !important;
+  border: 4px solid #000 !important;
+  box-shadow: 6px 6px 0px 0px #000 !important;
+  border-radius: 0 !important;
+  font-weight: bold;
+}
+.input-box:focus, .select-obsidian:focus, textarea:focus {
+  background: var(--amber) !important;
+  outline: none !important;
+}
+
+.card-grid-item {
+  background: #FFF !important;
+  border: 4px solid #000 !important;
+  box-shadow: 8px 8px 0px 0px #000 !important;
+  transition: transform 0.1s, box-shadow 0.1s !important;
+}
+.card-grid-item:hover {
+  transform: translate(-4px, -4px) !important;
+  box-shadow: 12px 12px 0px 0px #000 !important;
+}
+
+.card-thumb {
+  background: #E0E0E0 !important;
+  border-bottom: 4px solid #000 !important;
+  image-rendering: pixelated;
+}
+
+.modal-panel {
+  background: #FFF !important;
+  border: 6px solid #000 !important;
+  box-shadow: 16px 16px 0px 0px rgba(0,0,0,1) !important;
+  border-radius: 0 !important;
+  color: #000 !important;
+}
+
+/* Modal text resets */
+.modal-panel h2, .modal-panel label, .modal-panel div {
+  color: #000 !important;
+}
+
+.empty-state {
+  background: #FFF !important;
+  border: 4px dashed #000 !important;
+  box-shadow: 8px 8px 0px 0px #000 !important;
+  color: #000 !important;
+}
+
+/* Specific component tweaks */
+.section-title {
+  color: #000 !important;
+  text-shadow: 4px 4px 0px var(--emerald) !important;
+  font-size: 40px !important;
+}
+.section-sub {
+  color: #444 !important;
+  font-weight: bold;
+}
+
+.filter-bar {
+  background: #FFF !important;
+  border: 4px solid #000 !important;
+  box-shadow: 6px 6px 0px 0px #000 !important;
+}
+.filter-search-box {
+  background: transparent !important;
+}
+.filter-search-box input {
+  color: #000 !important;
+  font-weight: bold;
+}
+
+.cat-link {
+  color: #000 !important;
+  font-weight: 800 !important;
+  border-radius: 0 !important;
+}
+.cat-link.active {
+  background: #000 !important;
+  color: #FFF !important;
+  box-shadow: 3px 3px 0 0 var(--gold) !important;
+}
+.cat-link:hover:not(.active) {
+  background: var(--amber) !important;
+}
+
+.co2-chip {
+  background: var(--emerald) !important;
+  border: 2px solid #000 !important;
+  color: #000 !important;
+  box-shadow: 3px 3px 0px 0px #000 !important;
+  font-weight: bold;
+}
+.verified-chip {
+  background: var(--gold) !important;
+  border: 2px solid #000 !important;
+  color: #FFF !important;
+  text-shadow: 1px 1px 0px #000;
+  box-shadow: 3px 3px 0px 0px #000 !important;
+  font-weight: bold;
+}
+.wallet-address {
+  background: var(--amber) !important;
+  color: #000 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0px 0px #000 !important;
+  font-weight: bold;
+}
+.wallet-balance {
+  background: #FFF !important;
+  color: #000 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0px 0px #000 !important;
+  font-weight: bold;
+}
+.live-dot {
+  background: #000 !important;
+}
+
+/* Override inline styling injected into rows */
+div[style*="background: var(--bg)"] { background: transparent !important; }
+div[style*="background: var(--s0)"], 
+div[style*="background: var(--s2)"], 
+div[style*="background: rgba(0,255,148,0.05)"],
+div[style*="background: rgba(212,175,55,0.05)"] {
+  background: #FFF !important;
+  color: #000 !important;
+  border: 3px solid #000 !important;
+  box-shadow: 4px 4px 0px 0px #000 !important;
+}
+div[style*="border-bottom: 1px solid var(--border)"] {
+  border-bottom: 4px solid #000 !important; margin-bottom: 16px; padding-bottom: 16px !important;
+}
+div[style*="border-top: 1px solid var(--border)"] {
+  border-top: 4px solid #000 !important;
+}
+
+h2, h3, .serif, .btn-text-gold {
+  color: #000 !important;
+  font-weight: 900 !important;
+}
+.btn-text-gold {
+  color: var(--gold) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 4px;
+}
+.btn-text-gold:hover {
+  background: transparent !important;
+  color: var(--gold-bright) !important;
+}
+
+/* Chat drawer overrides */
+.modal-backdrop > div[style*="animation: slideInRight"] {
+  background: #F0F4C3 !important; /* Soft pastels for modals */
+  border-left: 6px solid #000 !important;
+  box-shadow: -10px 0 0 0 #000 !important;
+}
+
+/* Ensure text doesn't disappear */
+span, div, p {
+  color: inherit;
+}
+div[style*="color: var(--text-dim)"], div[style*="color: var(--text-muted)"] {
+  color: #333 !important;
+}
+div[style*="color: var(--text)"] {
+  color: #000 !important;
+}
+div[style*="color: var(--gold)"] {
+  color: var(--gold) !important;
+  font-weight: 900 !important;
+  text-shadow: 1px 1px 0px #000 !important;
+}
+div[style*="color: var(--emerald)"] {
+  color: var(--emerald-dim) !important;
+  font-weight: 900 !important;
+}
+
+/* Prevent printing logic from getting confused by shadow */
+@media print {
+  .receipt-print-area {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
