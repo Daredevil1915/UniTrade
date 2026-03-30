@@ -12,12 +12,12 @@ const goldIcon = new L.DivIcon({
 });
 
 const PICKUP_SPOTS = [
-    { name: "🚪 IEC Main Gate", lat: 28.6758, lng: 77.4471, desc: "SECURITY MONITORING" },
-    { name: "🏢 Admin Block", lat: 28.6762, lng: 77.4479, desc: "HIGH VISIBILITY" },
-    { name: "📚 Library Entrance", lat: 28.6766, lng: 77.4484, desc: "DAYTIME LOCATION" },
-    { name: "🍽️ Cafeteria", lat: 28.6761, lng: 77.4489, desc: "BUSY COMMON AREA" },
-    { name: "🅿️ Parking Zone A", lat: 28.6754, lng: 77.4482, desc: "SPACIOUS MEETUP" },
-    { name: "🏠 Hostel Gate", lat: 28.6752, lng: 77.4475, desc: "MONITORED ENTRY" },
+    { name: "🚪 IEC Main Gate", lat: 28.47595, lng: 77.50155, desc: "SECURITY MONITORING" },
+    { name: "🏢 Admin Block", lat: 28.47578, lng: 77.50130, desc: "HIGH VISIBILITY" },
+    { name: "📚 Library Entrance", lat: 28.47562, lng: 77.50105, desc: "DAYTIME LOCATION" },
+    { name: "🍽️ Cafeteria", lat: 28.47545, lng: 77.50122, desc: "BUSY COMMON AREA" },
+    { name: "🅿️ Parking Zone A", lat: 28.47588, lng: 77.50102, desc: "SPACIOUS MEETUP" },
+    { name: "🏨 Hostel Gate", lat: 28.47530, lng: 77.50088, desc: "MONITORED ENTRY" },
 ];
 
 export default function MapModal({ onClose }) {
@@ -42,14 +42,17 @@ export default function MapModal({ onClose }) {
                     <div>
                         <h2 className="serif" style={{ color: "var(--text)", fontSize: 24, fontWeight: 800, margin: "0 0 8px" }}>CAMPUS NODES.</h2>
                         <div style={{ color: "var(--text-dim)", fontSize: 11, fontFamily: "'Space Mono', monospace", letterSpacing: "0.1em" }}>
-                            VERIFIED MEETUP SPOTS · IEC GHAZIABAD
+                            VERIFIED MEETUP SPOTS · IEC COLLEGE OF ENGINEERING & TECHNOLOGY
+                        </div>
+                        <div style={{ color: "var(--text-muted)", fontSize: 10, fontFamily: "'Space Mono', monospace", letterSpacing: "0.06em", marginTop: 6 }}>
+                            PLOT NO. 4, SURAJPUR-KASNA RD, KNOWLEDGE PARK I, GREATER NOIDA · FGG2+9F
                         </div>
                     </div>
                     <button onClick={onClose} className="btn-text-gold" style={{ fontSize: 24 }}>✕</button>
                 </div>
 
                 <div style={{ border: "1px solid var(--border)", overflow: "hidden", height: 400, background: "var(--s0)" }}>
-                    <MapContainer center={[28.6758, 77.4479]} zoom={17} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
+                    <MapContainer center={[28.47570, 77.50120]} zoom={18} style={{ height: "100%", width: "100%" }} scrollWheelZoom={true}>
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
