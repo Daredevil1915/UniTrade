@@ -9,9 +9,6 @@ It supports:
 - chat offers between buyer and seller
 - wishlist and profile sync
 
-## Full Technical Report
-For a complete architecture and workflow deep-dive, see [PROJECT_REPORT.md](PROJECT_REPORT.md).
-
 ## Current UI Theme
 The currently active design system is Sovereign Glass.
 
