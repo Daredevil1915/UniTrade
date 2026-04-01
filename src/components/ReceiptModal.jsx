@@ -5,12 +5,71 @@ import { truncate } from "./Shared";
 export default function ReceiptModal({ order, onClose }) {
     if (!order) return null;
 
-    const handlePrint = () => {
-        window.print();
-    };
-
     const algoPrice = Number(order.price || order.finalPrice || order.amount || 0);
     const inrValue = (algoPrice * 15).toLocaleString("en-IN");
+
+    const handlePrint = () => {
+        const printContent = document.getElementById("receipt-print-area");
+        if (!printContent) return;
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert("Please allow popups to print the receipt.");
+            return;
+        }
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>UniTrade Receipt - ${order.id}</title>
+                    <style>
+                        body {
+                            font-family: 'Space Mono', 'Inter', monospace, sans-serif;
+                            padding: 40px;
+                            background: white;
+                            color: #000;
+                            margin: 0;
+                        }
+                        .receipt-print-area {
+                            max-width: 500px;
+                            margin: 0 auto;
+                        }
+                        .serif { font-family: serif; }
+                        .no-print { display: none !important; }
+                        
+                        /* Map any used CSS vars to printable fallback colors */
+                        :root {
+                            --border: #ccc;
+                            --text: #000;
+                            --text-dim: #555;
+                            --gold: #000; /* Print gold as black for better readability */
+                            --s0: #fafafa;
+                        }
+                        
+                        /* Force clean printable styles */
+                        * {
+                            color: black !important;
+                            border-color: #ccc !important;
+                            box-shadow: none !important;
+                            text-shadow: none !important;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-print-area">
+                        ${printContent.innerHTML}
+                    </div>
+                    <script>
+                        setTimeout(() => {
+                            window.print();
+                            window.close();
+                        }, 250);
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
 
     return (
         <motion.div
@@ -21,37 +80,8 @@ export default function ReceiptModal({ order, onClose }) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
         >
-            <style>
-                {`
-                    @media print {
-                        body * { visibility: hidden; }
-                        .receipt-print-area, .receipt-print-area * { visibility: visible; }
-                        .receipt-print-area {
-                            position: fixed !important;
-                            left: 0 !important;
-                            top: 0 !important;
-                            width: 100% !important;
-                            max-width: none !important;
-                            height: 100% !important;
-                            margin: 0 !important;
-                            padding: 0 !important;
-                            background: white !important;
-                            color: black !important;
-                            border: none !important;
-                            box-shadow: none !important;
-                            transform: none !important;
-                        }
-                        .receipt-print-area * { color: black !important; border-color: black !important; }
-                        .no-print { display: none !important; }
-                        .receipt-modal-container { 
-                            position: static !important;
-                            background: transparent !important; 
-                        }
-                        @page { margin: 10mm; size: auto; }
-                    }
-                `}
-            </style>
             <motion.div
+              id="receipt-print-area"
               className="modal-panel receipt-print-area"
               style={{ maxWidth: 460, padding: "40px 32px", maxHeight: "90vh", overflowY: "auto", position: "relative" }}
               initial={{ scale: 0.85, opacity: 0, y: 40 }}
@@ -100,9 +130,16 @@ export default function ReceiptModal({ order, onClose }) {
                     </div>
 
                     {order.txId && (
-                        <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                             <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'Space Mono', monospace", fontWeight: 700 }}>TX HASH</span>
-                            <span style={{ fontSize: 10, color: "var(--text)", fontFamily: "'Space Mono', monospace" }}>{truncate(order.txId)}</span>
+                            <a 
+                                href={`https://lora.algokit.io/testnet/transaction/${order.txId}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                style={{ fontSize: 10, color: "var(--text)", fontFamily: "'Space Mono', monospace", textDecoration: "underline", textUnderlineOffset: 2 }}
+                            >
+                                {truncate(order.txId)} ↗
+                            </a>
                         </div>
                     )}
                 </div>
